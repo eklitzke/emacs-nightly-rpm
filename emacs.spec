@@ -1,24 +1,22 @@
 # This file is encoded in UTF-8.  -*- coding: utf-8 -*-
 
-%define muleucs_ver current
-%define tramp_ver 2.1.3
+%define snapdate 20050406
 
 Summary: GNU Emacs text editor
 Name: emacs
-Version: 21.3
-Release: 27
+Version: 22.0.50
+Release: 0.%{snapdate}
 License: GPL
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
-Source0: ftp://ftp.gnu.org/gnu/emacs/emacs-%{version}.tar.gz
-Source1: ftp://ftp.gnu.org/gnu/emacs/leim-%{version}.tar.gz
+#Source0: ftp://ftp.gnu.org/gnu/emacs/emacs-%{version}.tar.gz
+Source0: emacs-%{version}-%{snapdate}.tar.gz
 Source3: emacs.desktop
 Source4: emacs.png
 Source5: dotemacs.el
 Source6: site-start.el
 Source7: http://www.python.org/emacs/python-mode/python-mode.el
 Source8: http://cvs.xemacs.org/viewcvs.cgi/XEmacs/packages/xemacs-packages/prog-modes/rpm-spec-mode.el
-Source10: ftp://ftp.gnu.org/gnu/emacs/elisp-manual-21-2.8.tar.bz2
 Source11: http://prdownloads.sourceforge.net/php-mode/php-mode-1.1.0.tgz
 Source12: php-mode-init.el
 Source13: ssl.el
@@ -29,40 +27,36 @@ Source20: po-mode.el
 Source21: po-compat.el
 Source22: po-mode-init.el
 Source23: po-mode-auto-replace-date-71264.patch
-Source24: ftp://ftp.m17n.org/pub/mule/Mule-UCS/test/Mule-UCS-%{muleucs_ver}.tar.gz
 Source25: lang-coding-systems-init.el
 Source26: default.el
-Source27: rfc1345.el
-Source28: http://ftp.gnu.org/gnu/tramp/tramp-%{tramp_ver}.tar.gz
-Source29: tramp-init.el
 Buildroot: %{_tmppath}/%{name}-%{version}-root
-BuildRequires: glibc-devel, gcc, bzip2, ncurses-devel, zlib-devel, autoconf213
-Buildrequires: xorg-x11-devel, Xaw3d-devel, libpng-devel, libjpeg-devel, libungif-devel, libtiff-devel
+BuildRequires: glibc-devel, gcc, bzip2, ncurses-devel, zlib-devel, autoconf, texinfo
+Buildrequires: xorg-x11-devel, libpng-devel, libjpeg-devel, libungif-devel, libtiff-devel gtk2-devel
 Requires: fonts-xorg-75dpi
 %ifarch %{ix86}
 BuildRequires: setarch
 %endif
 Requires: emacs-common = %{version}-%{release}
-PreReq: %{_sbindir}/alternatives
 Obsoletes: emacs-X11
 Conflicts: gettext < 0.10.40
 Patch2: emacs-21.2-s390.patch
-Patch3: emacs-21.2-x86_64.patch
+# * needs updating *
 Patch4: emacs-21.2-sticky-bit-80049.patch
 Patch5: emacs-21.2-s390x.patch
-Patch6: emacs-21.2-menubar-games.patch
+#Patch6: emacs-21.2-menubar-games.patch
+# * needs updating *
 Patch7: emacs-21.2-alloc-blockinput-83600.patch
+# * needs updating *
 Patch8: browse-url-htmlview-84262.patch
 Patch9: emacs-21.3-ppc64.patch
-Patch10: editfns.c-Fformat-multibyte-davej.patch
 Patch11: emacs-21.3-no-rpath.patch
+# * needs updating *
 Patch12: emacs-21.3-lisp-textmodes-ispell-languages.patch
+# * maybe needs updating *
 Patch13: emacs-21.3-gud-libtool-fix.patch
 Patch14: emacs-xim-status-under-window-125413.patch
-Patch15: emacs-21.3-xterm-modifiers-137868.patch
-Patch16: movemail-CAN-2005-0100.patch
-Patch17: emacs-21.3-gcc4.patch
-Patch18: emacs-21.3-latex-mode-hook-144083.patch
+# still need this?
+#Patch17: emacs-21.3-gcc4.patch
 
 %description
 Emacs is a powerful, customizable, self-documenting, modeless text
@@ -76,7 +70,6 @@ This package provides an emacs binary with support for X windows.
 Summary: GNU Emacs text editor without X support
 Group: Applications/Editors
 Requires: emacs-common = %{version}-%{release}
-PreReq: %{_sbindir}/alternatives
 
 %description nox
 Emacs is a powerful, customizable, self-documenting, modeless text
@@ -91,6 +84,7 @@ on a terminal.
 Summary: Emacs common files
 Group: Applications/Editors
 PreReq: /sbin/install-info, dev, %{_sbindir}/alternatives
+Obsoletes: emacs-leim
 
 %description common
 Emacs is a powerful, customizable, self-documenting, modeless text
@@ -111,50 +105,31 @@ programs included with the main Emacs text editor package.
 You need to install emacs-el only if you intend to modify any of the
 Emacs packages or see some elisp examples.
 
-%package leim
-Summary: Emacs Lisp files for input methods for international characters.
-Group: Applications/Editors
-
-%description leim
-The emacs-leim package contains Emacs Lisp code for input methods for
-various international character scripts. Basically, the Lisp code
-provided by this package describes the consecutive keystrokes that a
-user must press in order to input a particular character in a
-non-English character set. Input methods for many different character
-sets are included in this package.
-
 %prep
-%setup -q -b 1 -a 24 -a 28
+%setup -q -n %name-%version
 
 %patch2 -p1 -b .s390
-%patch3 -p1 -b .hammer
-%patch4 -p1 -b .sticky
+#%%patch4 -p1 -b .sticky
 %patch5 -p1 -b .s390x
 # block input in `allocate_vectorlike' (alloc.c)
-%patch7 -p1 -b .block
+#%%patch7 -p1 -b .block
 %patch9 -p1 -b .ppc64
-%patch10 -p1 -b .multibyte
 %patch11 -p1 -b .rpath
 %patch14 -p1 -b .StatusArea
-%patch15 -p0 -b .modifier
-%patch16 -p1 -b .fmtstr
-%patch17 -p1 -b .getcwd
-
+#%%patch17 -p1 -b .getcwd
 # patches 2 and 3 touch configure.in
-autoconf-2.13
+autoconf
 
 ## Lisp patches
 # remove game we can't ship
-%patch6 -p1
-rm lisp/finder-inf.el lisp/play/tetris.el*
+#%%patch6 -p1
+#rm lisp/finder-inf.el lisp/play/tetris.el*
 # make browse-url default to htmlview not netscape
-%patch8 -p1
+#%%patch8 -p1
 # fix names of aspell language dictionaries
-%patch12 -p1
+#%%patch12 -p1
 # fix running gdb with libtool
-%patch13 -p1
-# run latex-mode-hook
-%patch18 -p1
+#%%patch13 -p1
 
 # install rest of site-lisp files
 ( cd site-lisp
@@ -166,19 +141,18 @@ rm lisp/finder-inf.el lisp/play/tetris.el*
   tar zxvf %SOURCE11
 )
 
-# add rfc1345 input method (default for UTF-8 lang env)
-cp -pi %SOURCE27 leim/quail
-
 %build
 export CFLAGS="-DMAIL_USE_LOCKF $RPM_OPT_FLAGS"
-%configure --with-pop --with-sound
+%configure --with-pop --with-sound --with-gtk --without-xim
 
 # workaround #101818 (vm/break dumper problem)
 %ifarch %{ix86}
 %define __make setarch i386 make
 %endif
 
-%__make %{?_smp_mflags}
+
+%__make bootstrap
+%__make %{?_smp_mflags} all
 
 # remove versioned file so that we end up with .1 suffix and only one DOC file
 rm src/emacs-%{version}.*
@@ -188,16 +162,9 @@ TOPDIR=${PWD}
 
 # make sure patched lisp files get byte-compiled
 %emacsbatch -f batch-byte-recompile-directory lisp
-%emacsbatch -f batch-byte-compile leim/quail/rfc1345.el site-lisp/*.el
+%emacsbatch -f batch-byte-compile site-lisp/*.el
 
 %__make %{?_smp_mflags} -C lisp updates
-
-( cd Mule-UCS-%{muleucs_ver}
-  %{emacsbatch} -l mucs-comp.el )
-
-( cd tramp-%{tramp_ver}
-  ./configure --with-emacs=${TOPDIR}/src/emacs
-  make )
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -209,9 +176,6 @@ rm -rf $RPM_BUILD_ROOT
 
 %makeinstall
 
-# bindir/emacs handled by alternatives
-rm $RPM_BUILD_ROOT%{_bindir}/emacs
-
 # rebuild without X support
 %configure --without-x
 %__make %{?_smp_mflags}
@@ -220,7 +184,6 @@ rm $RPM_BUILD_ROOT%{_bindir}/emacs
 install -m 0755 src/emacs-%{version}.2 $RPM_BUILD_ROOT%{_bindir}/emacs-nox-%{version}
 #ln $RPM_BUILD_ROOT%{_bindir}/emacs-nox{-%{version},}
 install -m 0644 etc/DOC-%{version}.2 $RPM_BUILD_ROOT%{_datadir}/emacs/%{version}/etc/
-install -m 0644 lib-src/fns-%{version}.2.el $RPM_BUILD_ROOT%{_libexecdir}/emacs/%{version}/*/
 
 # make sure movemail isn't setgid
 chmod 755 $RPM_BUILD_ROOT%{_libexecdir}/emacs/%{version}/*/movemail
@@ -251,43 +214,31 @@ install -m 0644 $RPM_SOURCE_DIR/*-init.el %{site_lisp}/site-start.d
 mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/skel
 install -m 0644 %SOURCE5 $RPM_BUILD_ROOT%{_sysconfdir}/skel/.emacs
 
-( cd Mule-UCS-%{muleucs_ver}/lisp
-  mkdir %{site_lisp}/Mule-UCS
-  cp -p *.el *.elc %{site_lisp}/Mule-UCS )
-
-( cd tramp-%{tramp_ver}
-  %makeinstall lispdir=%{site_lisp}/tramp )
-
-# elisp reference manual
-tar jxf %{SOURCE10}
-( cd elisp-manual-21-2.8
-  install -m 644 elisp elisp-* $RPM_BUILD_ROOT%{_infodir} )
-
 # after everything is installed, remove info dir
 rm -f $RPM_BUILD_ROOT%{_infodir}/dir
+
+# drop this for now
+rm -r $RPM_BUILD_ROOT/var/games
 
 #
 # create file lists
 #
-rm -f *-filelist {common,el,leim}-*-files
+rm -f *-filelist {common,el}-*-files
 ( TOPDIR=${PWD}
   cd $RPM_BUILD_ROOT
 
-  find .%{_datadir}/emacs/%{version}/lisp .%{_datadir}/emacs/site-lisp \( -type f -not -name '*.el' -fprint $TOPDIR/common-lisp-none-elc-files \) -o \( -type d -fprintf $TOPDIR/common-lisp-dir-files "%%%%dir %%p\n" \) -o \( -name '*.el' ! -name site-start.el \( -exec test -e '{}'c \; -fprint $TOPDIR/el-bytecomped-files -o -fprint $TOPDIR/common-not-comped-files \) \)
-
-  find .%{_datadir}/emacs/%{version}/leim \( -name '*.elc' -fprint $TOPDIR/leim-elc-files \) -o \( -type d -fprintf $TOPDIR/leim-dir-files "%%%%dir %%p\n" -fprintf $TOPDIR/el-leim-dir-files "%%%%dir %%p\n" \) -o \( -name '*.el' \( -exec test -e '{}'c \; -fprint $TOPDIR/el-leim-bytecomped-files -o -fprint $TOPDIR/leim-not-comped-files \) \)
+  find .%{_datadir}/emacs/%{version}/lisp .%{_datadir}/emacs/%{version}/leim .%{_datadir}/emacs/site-lisp \( -type f -not -name '*.el' -fprint $TOPDIR/common-lisp-none-elc-files \) -o \( -type d -fprintf $TOPDIR/common-lisp-dir-files "%%%%dir %%p\n" \) -o \( -name '*.el' ! -name site-start.el \( -exec test -e '{}'c \; -fprint $TOPDIR/el-bytecomped-files -o -fprint $TOPDIR/common-not-comped-files \) \)
 )
 
 # put the lists together after filtering  ./usr to /usr
 sed -i -e "s|\.%{_prefix}|%{_prefix}|" *-files
 cat common-*-files > common-filelist
 cat el-*-files common-lisp-dir-files > el-filelist
-cat leim-*-files > leim-filelist
 
 %clean
 rm -rf $RPM_BUILD_ROOT
    
-%define info_files ada-mode autotype ccmode cl dired-x ebrowse ediff efaq elisp emacs eshell eudc forms gnus idlwave info message mh-e pcl-cvs reftex sc speedbar vip viper widget woman
+%define info_files ada-mode autotype calc ccmode cl dired-x ebrowse ediff efaq eintr elisp emacs emacs-mime emacs-xtra eshell eudc flymake forms gnus idlwave info message mh-e pcl-cvs pgg reftex sc ses sieve speedbar tramp vip viper widget woman
 
 %post
 alternatives --install %{_bindir}/emacs emacs %{_bindir}/emacs-%{version} 50
@@ -304,7 +255,6 @@ fi
 if [ $1 -eq 0 ]; then
   alternatives --remove emacs %{_bindir}/emacs-nox-%{version}
 fi
-
 
 %post common
 for f in %{info_files}; do
@@ -328,7 +278,6 @@ fi
 %dir %{_datadir}/emacs/%{version}/etc
 %{_datadir}/emacs/%{version}/etc/DOC-%{version}.1
 %dir %{_libexecdir}/emacs/%{version}/*
-%{_libexecdir}/emacs/%{version}/*/fns-%{version}.1.el
 %{_datadir}/applications/gnu-emacs.desktop
 %{_datadir}/pixmaps/emacs.png 
 
@@ -339,7 +288,6 @@ fi
 %dir %{_datadir}/emacs/%{version}/etc
 %{_datadir}/emacs/%{version}/etc/DOC-%{version}.2
 %dir %{_libexecdir}/emacs/%{version}/*
-%{_libexecdir}/emacs/%{version}/*/fns-%{version}.2.el
 
 %files -f common-filelist common
 %defattr(-,root,root)
@@ -354,39 +302,26 @@ fi
 %dir %{_datadir}/emacs/%{version}
 %{_datadir}/emacs/%{version}/etc
 %exclude %{_datadir}/emacs/%{version}/etc/DOC-%{version}.*
-# quieten startup when -leim and -el aren't installed
-%dir %{_datadir}/emacs/%{version}/leim
 %{_datadir}/emacs/%{version}/site-lisp
 %{_libexecdir}/emacs
-%exclude %{_libexecdir}/emacs/%{version}/*/fns-%{version}.*.el
 %attr(0644,root,root) %config %{_datadir}/emacs/site-lisp/default.el
 %attr(0644,root,root) %config %{_datadir}/emacs/site-lisp/site-start.el
 
 %files -f el-filelist el
 %defattr(-,root,root)
 
-%files -f leim-filelist leim
-%defattr(-,root,root)
-
 %changelog
-* Wed Apr  6 2005 Jens Petersen <petersen@redhat.com> - 21.3-27
+* Wed Apr  6 2005 Jens Petersen <petersen@redhat.com> - 22.0.50-0.20050406
+- update to snapshot of current cvs 
+  - configure xim support off by default
+  - bootstrap snapshot
 - use alternatives to switch _bindir/emacs between emacs and emacs-nox
   (Henning Schmiedehausen, #151067)
   - remove emacs and emacs-nox from bindir
   - prereq alternatives for emacs and emacs-nox
   - add post and postun scripts to handle alternatives
 - buildrequire xorg-x11-devel instead of XFree86-devel
-- really include and apply emacs-21.3-latex-mode-hook-144083.patch
 - make emacs and emacs-nox own _datadir/emacs/version too
-
-* Wed Mar  9 2005 Jens Petersen <petersen@redhat.com> - 21.3-26
-- rebuild with gcc 4.0
-  - add emacs-21.3-gcc4.patch for emacsclient
-
-* Mon Feb 28 2005 Jens Petersen <petersen@redhat.com> - 21.3-25
-- add tramp-2.1.3 to site-lisp (David Woodhouse, 149703)
-  - move removal of info dir to after its installation
-  - add tramp-init.el to put tramp into load-path
 
 * Thu Feb 24 2005 Jens Petersen <petersen@redhat.com> - 21.3-24
 - mark default.el as a noreplace config file (Pawel Salek, 149310)
@@ -394,8 +329,6 @@ fi
   Latin characters becoming prefixes and making emacs loop
   (Eddahbi Karim, 126007)
 - make emacs-el own its lisp directories
-- run latex-mode-hook in latex-mode (Martin Biely, 144083)
-  - add emacs-21.3-latex-mode-hook-144083.patch
 
 * Fri Feb 18 2005 Jens Petersen <petersen@redhat.com> - 21.3-23
 - install %{_bindir}/emacs-nox as a hardlink of the versioned binary
@@ -407,18 +340,25 @@ fi
   (Axel Thimm, 147791)
 - move emacs.png from common to main package
 
-* Fri Feb  4 2005 Jens Petersen <petersen@redhat.com> - 21.3-21
-- fix CAN-2005-0100 movemail vulnerability with movemail-CAN-2005-0100.patch
-  (Max Vozeler, 146701)
-
-* Fri Jan 14 2005 Jens Petersen <petersen@redhat.com> - 21.3-20
-- workaround xorg-x11 modifier key problem with
-  emacs-21.3-xterm-modifiers-137868.patch (Thomas Woerner, 137868)
-
 * Mon Nov 29 2004 Jens Petersen <petersen@redhat.com> - 21.3-19
 - prefer XIM status under-the-window for now to stop xft httx from dying
   (125413): add emacs-xim-status-under-window-125413.patch
 - default diff to unified format in .emacs
+
+* Wed Nov 10 2004 Jens Petersen <petersen@redhat.com> - 21.3.50-0.20041111
+- initial packaging of cvs emacs
+  - leim and elisp manual now in main tarball
+  - no leim subpackage anymore, so make common obsolete it
+  - no longer need MuleUCS, nor rfc1345.el
+  - buildrequire and use autoconf rather autoconf213
+  - no longer need emacs-21.2-x86_64.patch,
+    editfns.c-Fformat-multibyte-davej.patch
+  - bring back game for now
+  - TODO: some patches still need updating
+  - fns.el no longer installed
+  - remove /var/games for now
+  - update filelist generation to single sweep
+  - update info_files list
 
 * Thu Nov  4 2004 Jens Petersen <petersen@redhat.com> - 21.3-18
 - show emacs again in the desktop menu (132567)

@@ -1,6 +1,16 @@
-# Makefile for source rpm: emacs
-# $Id$
-NAME := emacs
-SPECFILE = $(firstword $(wildcard *.spec))
+NAME = emacs
 
-include ../common/Makefile.common
+DIST = current
+# only one repo
+ALL_DISTS = no
+
+STAGE_DIR=/fedora/emacs
+REPO_TOP=$(STAGE_DIR)
+REPO=testing
+WEBSITE=people:public_html/emacs/
+
+include ../Makefile.repo
+
+dist:
+	./make-dist
+
