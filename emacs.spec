@@ -207,7 +207,7 @@ done
 alternatives --install %{_bindir}/etags etags %{_bindir}/etags.emacs 80
 
 %preun common
-if [ "$1" = 0 ]; then
+if [ $1 -eq 0 ]; then
   for f in %{info_files}; do
     /sbin/install-info --delete %{_infodir}/$f.gz %{_infodir}/dir \
       --section="GNU Emacs" 2> /dev/null || :
