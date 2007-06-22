@@ -2,8 +2,8 @@
 
 Summary: GNU Emacs text editor
 Name: emacs
-Version: 22.0.990
-Release: 2%{?dist}
+Version: 22.1
+Release: 1%{?dist}
 License: GPL
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -14,7 +14,7 @@ Source3: dotemacs.el
 Source4: site-start.el
 Source5: http://www.python.org/emacs/python-mode/python-mode.el
 Source6: http://cvs.xemacs.org/viewcvs.cgi/XEmacs/packages/xemacs-packages/prog-modes/rpm-spec-mode.el
-Source7: http://download.sourceforge.net/php-mode/php-mode-1.1.0.tgz
+Source7: http://download.sourceforge.net/php-mode/php-mode-1.2.0.tgz
 Source8: php-mode-init.el
 Source9: ssl.el
 Source10: python-mode-init.el
@@ -137,25 +137,10 @@ TOPDIR=${PWD}
 %install
 rm -rf $RPM_BUILD_ROOT
 
-# workaround #101818 (vm/break dumper problem)
-make install \
-	prefix=%{?buildroot:%{buildroot}}%{_prefix} \
-	exec_prefix=%{?buildroot:%{buildroot}}%{_exec_prefix} \
-	bindir=%{?buildroot:%{buildroot}}%{_bindir} \
-	sbindir=%{?buildroot:%{buildroot}}%{_sbindir} \
-	sysconfdir=%{?buildroot:%{buildroot}}%{_sysconfdir} \
-	datadir=%{?buildroot:%{buildroot}}%{_datadir} \
-	includedir=%{?buildroot:%{buildroot}}%{_includedir} \
-	libdir=%{?buildroot:%{buildroot}}%{_libdir} \
-	libexecdir=%{?buildroot:%{buildroot}}%{_libexecdir} \
-	localstatedir=%{?buildroot:%{buildroot}}%{_localstatedir} \
-	sharedstatedir=%{?buildroot:%{buildroot}}%{_sharedstatedir} \
-	mandir=%{?buildroot:%{buildroot}}%{_mandir} \
-	infodir=%{?buildroot:%{buildroot}}%{_infodir}
+%makeinstall
 
-# suffix binaries with -x
-mv $RPM_BUILD_ROOT%{_bindir}/emacs{,-x}
-mv $RPM_BUILD_ROOT%{_bindir}/emacs-%{version}{,-x}
+# let alternatives manage the symlink
+rm $RPM_BUILD_ROOT%{_bindir}/emacs
 
 # rebuild without X support
 # remove the versioned binary with X support so that we end up with .1 suffix for emacs-nox too
@@ -165,11 +150,6 @@ rm src/emacs-%{version}.*
 
 # install the emacs without X
 install -m 0755 src/emacs-%{version}.1 $RPM_BUILD_ROOT%{_bindir}/emacs-%{version}-nox
-ln $RPM_BUILD_ROOT%{_bindir}/emacs{-%{version},}-nox
-
-# install wrapper script
-install -m 0755 %SOURCE19 $RPM_BUILD_ROOT%{_bindir}/emacs-%{version}
-ln -s %{_bindir}/emacs-%{version} $RPM_BUILD_ROOT%{_bindir}/emacs
 
 # make sure movemail isn't setgid
 chmod 755 $RPM_BUILD_ROOT%{emacs_libexecdir}/movemail
@@ -228,6 +208,22 @@ rm -rf $RPM_BUILD_ROOT
 
 %define info_files ada-mode autotype calc ccmode cl dired-x ebrowse ediff efaq eintr elisp0 elisp1 elisp emacs emacs-mime emacs-xtra erc eshell eudc flymake forms gnus idlwave info message mh-e newsticker org pcl-cvs pgg rcirc reftex sc ses sieve smtpmail speedbar tramp url viper vip widget woman
 
+%preun
+if [ $1 -eq 0 ] ; then
+  alternatives --remove emacs %{_bindir}/emacs-%{version}
+fi
+
+%posttrans
+alternatives --install %{_bindir}/emacs emacs %{_bindir}/emacs-%{version} 80
+
+%preun nox
+if [ $1 -eq 0 ] ; then
+  alternatives --remove emacs %{_bindir}/emacs-%{version}-nox
+fi
+
+%posttrans nox
+alternatives --install %{_bindir}/emacs emacs %{_bindir}/emacs-%{version}-nox 70
+
 %post common
 for f in %{info_files}; do
   /sbin/install-info %{_infodir}/$f.gz %{_infodir}/dir --section="GNU Emacs" 2> /dev/null || :
@@ -245,10 +241,7 @@ fi
 
 %files
 %defattr(-,root,root)
-%{_bindir}/emacs
 %{_bindir}/emacs-%{version}
-%{_bindir}/emacs-x
-%{_bindir}/emacs-%{version}-x
 %dir %{_libexecdir}/emacs
 %dir %{_libexecdir}/emacs/%{version}
 %dir %{emacs_libexecdir}
@@ -257,9 +250,6 @@ fi
 
 %files nox
 %defattr(-,root,root)
-%{_bindir}/emacs
-%{_bindir}/emacs-%{version}
-%{_bindir}/emacs-nox
 %{_bindir}/emacs-%{version}-nox
 %dir %{_libexecdir}/emacs
 %dir %{_libexecdir}/emacs/%{version}
@@ -269,7 +259,6 @@ fi
 %defattr(-,root,root)
 %config(noreplace) %{_sysconfdir}/skel/.emacs
 %doc etc/NEWS BUGS README 
-%exclude %{_bindir}/emacs
 %exclude %{_bindir}/emacs-*
 %{_bindir}/*
 %{_mandir}/*/*
@@ -288,6 +277,11 @@ fi
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Fri Jun  6 2007 Chip Coldwell <coldwell@redhat.com> - 22.1-1
+- move alternatives install to posttrans scriptlet (Resolves: bz239745)
+- new release tarball from FSF (Resolves: bz245303)
+- new php-mode 1.2.0
+
 * Wed May 23 2007 Chip Coldwell <coldwell@redhat.com> - 22.0.990-2
 - revert all spec file changes since 22.0.95-1 (Resolves: bz239745)
 - new pretest tarball from FSF (Resolves: bz238234)
