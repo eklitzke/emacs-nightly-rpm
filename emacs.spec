@@ -3,7 +3,7 @@
 Summary: GNU Emacs text editor
 Name: emacs
 Version: 22.1
-Release: 1%{?dist}
+Release: 4%{?dist}
 License: GPL
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -12,12 +12,10 @@ Source1: emacs.desktop
 Source2: emacs.png
 Source3: dotemacs.el
 Source4: site-start.el
-Source5: http://www.python.org/emacs/python-mode/python-mode.el
 Source6: http://cvs.xemacs.org/viewcvs.cgi/XEmacs/packages/xemacs-packages/prog-modes/rpm-spec-mode.el
 Source7: http://download.sourceforge.net/php-mode/php-mode-1.2.0.tgz
 Source8: php-mode-init.el
 Source9: ssl.el
-Source10: python-mode-init.el
 Source11: rpm-spec-mode-init.el
 Source12: rpm-spec-mode.el-0.14-xemacs-compat.patch
 Source13: focus-init.el
@@ -33,15 +31,20 @@ BuildRequires: atk-devel, cairo-devel, freetype-devel, fontconfig-devel, giflib-
 BuildRequires: libjpeg-devel, libtiff-devel, libX11-devel, libXau-devel, libXdmcp-devel, libXrender-devel, libXt-devel
 BuildRequires: libXpm-devel, ncurses-devel, xorg-x11-proto-devel, zlib-devel
 BuildRequires: autoconf, automake, bzip2, cairo, texinfo
-Requires: xorg-x11-fonts-ISO8859-1-75dpi
+Requires: xorg-x11-fonts-ISO8859-1-100dpi
 Requires: emacs-common = %{version}-%{release}
 Conflicts: gettext < 0.10.40
+Provides: emacs(bin)
 
 # C and build patches
 
 # Lisp and doc patches
 
 %define paranoid 1
+%define expurgate 0
+
+%define site_lisp %{_datadir}/emacs/site-lisp
+%define pkgconfig %{_datadir}/pkgconfig
 
 %description
 Emacs is a powerful, customizable, self-documenting, modeless text
@@ -55,6 +58,7 @@ This package provides an emacs binary with support for X windows.
 Summary: GNU Emacs text editor without X support
 Group: Applications/Editors
 Requires: emacs-common = %{version}-%{release}
+Provides: emacs(bin)
 
 %description nox
 Emacs is a powerful, customizable, self-documenting, modeless text
@@ -97,7 +101,7 @@ Emacs packages or see some elisp examples.
 
 # install rest of site-lisp files
 ( cd site-lisp
-  cp %SOURCE5 %SOURCE6 %SOURCE9 %SOURCE14 %SOURCE20 .
+  cp %SOURCE6 %SOURCE9 %SOURCE14 %SOURCE20 .
   tar xfz %SOURCE7  # php-mode
   # xemacs compat patch for rpm-spec-mode
   patch < %SOURCE12
@@ -108,6 +112,10 @@ Emacs packages or see some elisp examples.
 # avoid trademark issues
 ( cd lisp/play
   rm -f tetris.el tetris.elc )
+%endif
+
+%if %{expurgate}
+rm -f etc/sex.6 etc/condom.1 etc/celibacy.1 etc/COOKIES etc/future-bug etc/JOKES
 %endif
 
 %build
@@ -134,13 +142,23 @@ TOPDIR=${PWD}
 
 %__make %{?_smp_mflags} -C lisp updates
 
+# Create pkgconfig file
+cat > emacs.pc << EOF
+sitepkglispdir=%{site_lisp}
+sitestartdir=%{site_lisp}/site-start.d
+
+Name: emacs
+Description: GNU Emacs text editor
+Version: %{version}
+EOF
+
 %install
-rm -rf $RPM_BUILD_ROOT
+rm -rf %{buildroot}
 
 %makeinstall
 
 # let alternatives manage the symlink
-rm $RPM_BUILD_ROOT%{_bindir}/emacs
+rm %{buildroot}%{_bindir}/emacs
 
 # rebuild without X support
 # remove the versioned binary with X support so that we end up with .1 suffix for emacs-nox too
@@ -149,40 +167,42 @@ rm src/emacs-%{version}.*
 %__make %{?_smp_mflags}
 
 # install the emacs without X
-install -m 0755 src/emacs-%{version}.1 $RPM_BUILD_ROOT%{_bindir}/emacs-%{version}-nox
+install -m 0755 src/emacs-%{version}.1 %{buildroot}%{_bindir}/emacs-%{version}-nox
 
 # make sure movemail isn't setgid
-chmod 755 $RPM_BUILD_ROOT%{emacs_libexecdir}/movemail
+chmod 755 %{buildroot}%{emacs_libexecdir}/movemail
 
-%define site_lisp $RPM_BUILD_ROOT%{_datadir}/emacs/site-lisp
+mkdir -p %{buildroot}%{site_lisp}
+install -m 0644 %SOURCE4 %{buildroot}%{site_lisp}/site-start.el
+install -m 0644 %SOURCE18 %{buildroot}%{site_lisp}
 
-mkdir -p %{site_lisp}
-install -m 0644 %SOURCE4 %{site_lisp}/site-start.el
-install -m 0644 %SOURCE18 %{site_lisp}
-
-mv $RPM_BUILD_ROOT%{_bindir}/{etags,etags.emacs}
-mv $RPM_BUILD_ROOT%{_mandir}/man1/{ctags.1,gctags.1}
-mv $RPM_BUILD_ROOT%{_bindir}/{ctags,gctags}
+mv %{buildroot}%{_bindir}/{etags,etags.emacs}
+mv %{buildroot}%{_mandir}/man1/{ctags.1,gctags.1}
+mv %{buildroot}%{_bindir}/{ctags,gctags}
 
 # GNOME / KDE files
-mkdir -p $RPM_BUILD_ROOT%{_datadir}/applications
-install -m 0644 %SOURCE1 $RPM_BUILD_ROOT%{_datadir}/applications/gnu-emacs.desktop
-mkdir -p $RPM_BUILD_ROOT%{_datadir}/pixmaps
-install -m 0644 %SOURCE2 $RPM_BUILD_ROOT%{_datadir}/pixmaps/
+mkdir -p %{buildroot}%{_datadir}/applications
+install -m 0644 %SOURCE1 %{buildroot}%{_datadir}/applications/gnu-emacs.desktop
+mkdir -p %{buildroot}%{_datadir}/pixmaps
+install -m 0644 %SOURCE2 %{buildroot}%{_datadir}/pixmaps/
 
 # install site-lisp files
-install -m 0644 site-lisp/*.el{,c} %{site_lisp}
+install -m 0644 site-lisp/*.el{,c} %{buildroot}%{site_lisp}
 
-mkdir -p %{site_lisp}/site-start.d
-install -m 0644 $RPM_SOURCE_DIR/*-init.el %{site_lisp}/site-start.d
+mkdir -p %{buildroot}%{site_lisp}/site-start.d
+install -m 0644 $RPM_SOURCE_DIR/*-init.el %{buildroot}%{site_lisp}/site-start.d
 
 # default initialization file
-mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/skel
-install -m 0644 %SOURCE3 $RPM_BUILD_ROOT%{_sysconfdir}/skel/.emacs
+mkdir -p %{buildroot}%{_sysconfdir}/skel
+install -m 0644 %SOURCE3 %{buildroot}%{_sysconfdir}/skel/.emacs
+
+# install pkgconfig file
+mkdir -p %{buildroot}/%{pkgconfig}
+install -m 0644 emacs.pc %{buildroot}/%{pkgconfig}
 
 # after everything is installed, remove info dir
-rm -f $RPM_BUILD_ROOT%{_infodir}/dir
-rm $RPM_BUILD_ROOT%{_localstatedir}/games/emacs/*
+rm -f %{buildroot}%{_infodir}/dir
+rm %{buildroot}%{_localstatedir}/games/emacs/*
 
 #
 # create file lists
@@ -190,7 +210,7 @@ rm $RPM_BUILD_ROOT%{_localstatedir}/games/emacs/*
 rm -f *-filelist {common,el}-*-files
 
 ( TOPDIR=${PWD}
-  cd $RPM_BUILD_ROOT
+  cd %{buildroot}
 
   find .%{_datadir}/emacs/%{version}/lisp \
     .%{_datadir}/emacs/%{version}/leim \
@@ -204,7 +224,7 @@ cat common-*-files > common-filelist
 cat el-*-files common-lisp-dir-files > el-filelist
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+rm -rf %{buildroot}
 
 %define info_files ada-mode autotype calc ccmode cl dired-x ebrowse ediff efaq eintr elisp0 elisp1 elisp emacs emacs-mime emacs-xtra erc eshell eudc flymake forms gnus idlwave info message mh-e newsticker org pcl-cvs pgg rcirc reftex sc ses sieve smtpmail speedbar tramp url viper vip widget woman
 
@@ -226,15 +246,14 @@ alternatives --install %{_bindir}/emacs emacs %{_bindir}/emacs-%{version}-nox 70
 
 %post common
 for f in %{info_files}; do
-  /sbin/install-info %{_infodir}/$f.gz %{_infodir}/dir --section="GNU Emacs" 2> /dev/null || :
+  /sbin/install-info %{_infodir}/$f.gz %{_infodir}/dir 2> /dev/null || :
 done
 alternatives --install %{_bindir}/etags etags %{_bindir}/etags.emacs 80
 
 %preun common
 if [ "$1" = 0 ]; then
   for f in %{info_files}; do
-    /sbin/install-info --delete %{_infodir}/$f.gz %{_infodir}/dir \
-      --section="GNU Emacs" 2> /dev/null || :
+    /sbin/install-info --delete %{_infodir}/$f.gz %{_infodir}/dir 2> /dev/null || :
   done
   alternatives --remove etags %{_bindir}/etags.emacs
 fi
@@ -273,10 +292,25 @@ fi
 
 %files -f el-filelist el
 %defattr(-,root,root)
+%{pkgconfig}/emacs.pc
 %dir %{_datadir}/emacs
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Wed Sep 12 2007 Chip Coldwell <coldwell@redhat.com> - 22.1-4
+- require xorg-x11-fonts-ISO8859-1-100dpi instead of 75dpi (Resolves: bz281861)
+- drop broken python mode (Resolves: bz262801)
+- use macro instead of variable style for buildroot.
+- add pkgconfig file.
+
+* Mon Aug 13 2007 Chip Coldwell <coldwell@redhat.com> - 22.1-3
+- add pkgconfig file for emacs-common and virtual provides (Resolves: bz242176)
+- glibc-open-macro.patch to deal with glibc turning "open" into a macro.
+- leave emacs info pages in default section (Resolves: bz199008) 
+
+* Fri Jul 13 2007 Chip Coldwell <coldwell@redhat.com> - 22.1-2
+- change group from Development to Utility
+
 * Fri Jun  6 2007 Chip Coldwell <coldwell@redhat.com> - 22.1-1
 - move alternatives install to posttrans scriptlet (Resolves: bz239745)
 - new release tarball from FSF (Resolves: bz245303)
