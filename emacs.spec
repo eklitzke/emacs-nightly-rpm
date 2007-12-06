@@ -3,7 +3,7 @@
 Summary: GNU Emacs text editor
 Name: emacs
 Version: 22.1
-Release: 5%{?dist}
+Release: 6%{?dist}
 License: GPL
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -118,7 +118,7 @@ rm -f etc/sex.6 etc/condom.1 etc/celibacy.1 etc/COOKIES etc/future-bug etc/JOKES
 %endif
 
 %build
-export CFLAGS="-DMAIL_USE_LOCKF -DSYSTEM_PURESIZE_EXTRA=16777216 $RPM_OPT_FLAGS"
+export CFLAGS="-DMAIL_USE_LOCKF $RPM_OPT_FLAGS"
 
 # stack-protector causes crashing on i386 (#174730)
 %ifarch %{ix86}
@@ -296,6 +296,9 @@ fi
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Mon Dec  6 2007 Chip Coldwell <coldwell@redhat.com> - 22.1-6
+- drop -DSYSTEM_PURESIZE_EXTRA=16777216 (bz409581)
+
 * Tue Nov  6 2007 Chip Coldwell <coldwell@redhat.com> - 22.1-5
 - fix insufficient safe-mode checks (Resolves: bz367581)
 - Update rpm-spec-mode to the current upstream, drop compat patch (bz306841)
