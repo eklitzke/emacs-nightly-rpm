@@ -3,7 +3,7 @@
 Summary: GNU Emacs text editor
 Name: emacs
 Version: 22.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -26,6 +26,7 @@ Source21: igrep-init.el
 Patch0: glibc-open-macro.patch
 Patch1: rpm-spec-mode.patch
 Patch2: po-mode-auto-replace-date-71264.patch
+Patch3: emacs-22.1.50-sparc64.patch
 Buildroot: %{_tmppath}/%{name}-%{version}-root
 BuildRequires: atk-devel, cairo-devel, freetype-devel, fontconfig-devel, giflib-devel, glibc-devel, gtk2-devel, libpng-devel
 BuildRequires: libjpeg-devel, libtiff-devel, libX11-devel, libXau-devel, libXdmcp-devel, libXrender-devel, libXt-devel
@@ -102,6 +103,7 @@ Emacs packages or see some elisp examples.
 %prep
 %setup -q
 %patch0 -p1 -b .glibc-open-macro
+%patch3 -p1 -b .sparc64-libdir
 
 # install rest of site-lisp files
 ( cd site-lisp
@@ -308,6 +310,9 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Thu Apr 24 2008 Dennis Gilmore <dennis@ausil.us> 22.2-2
+- add patch fixing libdir on sparc64
+
 * Tue Apr 22 2008 Chip Coldwell <coldwell@redhat.com> 22.2-1
 - revert back to emacs-22.2 (bz443639)
 - update to php-mode-1.4.0
