@@ -2,6 +2,7 @@
 
 Summary: GNU Emacs text editor
 Name: emacs
+Epoch: 1
 Version: 22.2
 Release: 2%{?dist}
 License: GPLv3+
