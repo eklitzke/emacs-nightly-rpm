@@ -158,7 +158,7 @@ sitestartdir=%{site_lisp}/site-start.d
 
 Name: emacs
 Description: GNU Emacs text editor
-Version: %{version}
+Version: %{epoch}:%{version}
 EOF
 
 %install
@@ -311,6 +311,10 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Thu May 01 2008 Dennis Gilmore <dennis@ausil.us> 22.2-3
+- add epoch
+- put epoch in .pc file
+
 * Thu Apr 24 2008 Dennis Gilmore <dennis@ausil.us> 22.2-2
 - add patch fixing libdir on sparc64
 
