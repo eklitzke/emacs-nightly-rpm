@@ -38,7 +38,7 @@ BuildRequires: autoconf, automake, bzip2, cairo, texinfo
 BuildRequires: setarch
 %endif
 Requires: xorg-x11-fonts-ISO8859-1-100dpi
-Requires: emacs-common = %{version}-%{release}
+Requires: emacs-common = %{epoch}:%{version}-%{release}
 Conflicts: gettext < 0.10.40
 Provides: emacs(bin)
 
@@ -63,7 +63,7 @@ This package provides an emacs binary with support for X windows.
 %package nox
 Summary: GNU Emacs text editor without X support
 Group: Applications/Editors
-Requires: emacs-common = %{version}-%{release}
+Requires: emacs-common = %{epoch}:%{version}-%{release}
 Provides: emacs(bin)
 
 %description nox
@@ -313,6 +313,9 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Thu May 01 2008 Tom "spot" Callaway <tcallawa@redhat.com>
+- fix requires to include epoch
+
 * Thu May 01 2008 Dennis Gilmore <dennis@ausil.us> 1:22.2-4
 - add patch from bz#435767
 
