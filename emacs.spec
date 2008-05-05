@@ -139,7 +139,8 @@ TOPDIR=${PWD}
 # make sure patched lisp files get byte-compiled
 %emacsbatch -f batch-byte-compile site-lisp/*.el
 
-%__make %{?_smp_mflags} -C lisp updates
+# This seems to have issue with smp_mflags. :/
+%__make -C lisp updates
 
 # Create pkgconfig file
 cat > emacs.pc << EOF
@@ -293,6 +294,7 @@ fi
 %changelog
 * Mon May  5 2008 Tom "spot" Callaway <tcallawa@redhat.com> - 22.1-7
 - fix scriptlets to match F-8
+- don't use smp_mflags on lisp make call
 
 * Mon Dec  6 2007 Chip Coldwell <coldwell@redhat.com> - 22.1-6
 - drop -DSYSTEM_PURESIZE_EXTRA=16777216 (bz409581)
