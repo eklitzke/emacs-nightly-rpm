@@ -3,7 +3,7 @@
 Summary: GNU Emacs text editor
 Name: emacs
 Version: 22.1
-Release: 10%{?dist}
+Release: 11%{?dist}
 License: GPL
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -141,7 +141,8 @@ TOPDIR=${PWD}
 # make sure patched lisp files get byte-compiled
 %emacsbatch -f batch-byte-compile site-lisp/*.el
 
-%__make %{?_smp_mflags} -C lisp updates
+# This seems to have issue with smp_mflags. :/
+%__make -C lisp updates
 
 # Create pkgconfig file
 cat > emacs.pc << EOF
@@ -294,6 +295,9 @@ fi
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Mon May  5 2008 Tom "spot" Callaway <tcallawa@redhat.com> 22.1-11
+- don't use smp_mflags on second make invocation
+
 * Thu Dec  6 2007 Chip Coldwell <coldwell@redhat.com> 22.1-10
 - drop -DSYSTEM_PURESIZE_EXTRA=16777216 (bz409581)
 
