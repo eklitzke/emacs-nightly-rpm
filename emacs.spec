@@ -3,36 +3,42 @@
 Summary: GNU Emacs text editor
 Name: emacs
 Version: 22.1
-Release: 11%{?dist}
+Release: 12%{?dist}
 License: GPL
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
-Source0: ftp://alpha.gnu.org/gnu/emacs/pretest/emacs-%{version}.tar.gz
+Source0: ftp://ftp.gnu.org/gnu/emacs/emacs-%{version}.tar.gz
 Source1: emacs.desktop
-Source2: emacs.png
+Source2: Emacs
 Source3: dotemacs.el
 Source4: site-start.el
 Source6: http://cvs.xemacs.org/viewcvs.cgi/XEmacs/packages/xemacs-packages/prog-modes/rpm-spec-mode.el
-Source7: http://download.sourceforge.net/php-mode/php-mode-1.2.0.tgz
+Source7: http://php-mode.svn.sourceforge.net/svnroot/php-mode/tags/php-mode-1.4.0/php-mode.el
 Source8: php-mode-init.el
 Source9: ssl.el
 Source11: rpm-spec-mode-init.el
 Source13: focus-init.el
 Source14: po-mode.el
 Source15: po-mode-init.el
-Source16: po-mode-auto-replace-date-71264.patch
 Source18: default.el
-Source19: wrapper
 Source20: igrep.el
 Source21: igrep-init.el
 Patch0: glibc-open-macro.patch
-Patch1: files-el.patch
+Patch1: po-mode-auto-replace-date-71264.patch
+# rpm-spec-compilation-mode.patch bz227418
+Patch2: rpm-spec-mode.patch
 Buildroot: %{_tmppath}/%{name}-%{version}-root
-BuildRequires: atk-devel, cairo-devel, freetype-devel, fontconfig-devel, giflib-devel, glibc-devel, gtk2-devel, libpng-devel
-BuildRequires: libjpeg-devel, libtiff-devel, libX11-devel, libXau-devel, libXdmcp-devel, libXrender-devel, libXt-devel
-BuildRequires: libXpm-devel, ncurses-devel, xorg-x11-proto-devel, zlib-devel
-BuildRequires: autoconf, automake, bzip2, cairo, texinfo
-Requires: xorg-x11-fonts-ISO8859-1-100dpi
+BuildRequires: atk-devel, cairo-devel, dbus-devel, freetype-devel
+BuildRequires: fontconfig-devel, giflib-devel, glibc-devel, gtk2-devel
+BuildRequires: libpng-devel, libjpeg-devel, librsvg2-devel, libtiff-devel,
+BuildRequires: libX11-devel, libXau-devel, libXdmcp-devel, libXrender-devel
+BuildRequires: libXt-devel, libXpm-devel, m17n-lib-devel, ncurses-devel
+BuildRequires: xorg-x11-proto-devel, zlib-devel
+BuildRequires: texinfo >= 4.6
+%ifarch %{ix86}
+BuildRequires: setarch
+%endif
+Requires: xorg-x11-fonts-75dpi
 Requires: emacs-common = %{version}-%{release}
 Conflicts: gettext < 0.10.40
 Provides: emacs(bin)
@@ -100,37 +106,42 @@ Emacs packages or see some elisp examples.
 %prep
 %setup -q
 %patch0 -p1 -b .glibc-open-macro
-%patch1 -p0 -b .files-el
 
 # install rest of site-lisp files
-( cd site-lisp
-  cp %SOURCE6 %SOURCE9 %SOURCE14 %SOURCE20 .
-  tar xfz %SOURCE7  # php-mode
+( ! [ -d site-lisp ] && mkdir site-lisp
+  cd site-lisp
+  cp %SOURCE6 %SOURCE7 %SOURCE9 %SOURCE14 %SOURCE20 .
   # fix po-auto-replace-revision-date nil
-  patch < %SOURCE16 )
+  patch < %PATCH1
+  # rpm-spec-mode can use compilation-mode
+  patch < %PATCH2 )
 
-%if %{paranoid}
+# we prefer our emacs.desktop file
+cp %SOURCE1 etc/emacs.desktop
+
 # avoid trademark issues
-( cd lisp/play
-  rm -f tetris.el tetris.elc )
+%if %{paranoid}
+rm -f lisp/play/tetris.el lisp/play/tetris.elc
 %endif
 
 %if %{expurgate}
 rm -f etc/sex.6 etc/condom.1 etc/celibacy.1 etc/COOKIES etc/future-bug etc/JOKES
 %endif
 
-%build
-export CFLAGS="-DMAIL_USE_LOCKF $RPM_OPT_FLAGS"
-
-# stack-protector causes crashing on i386 (#174730)
+# Turn off address space randomization for the dumper.  The dumper
+# tries to detect randomization and turn it off, but the heuristics
+# don't work reliably.
 %ifarch %{ix86}
-CFLAGS=`echo $CFLAGS | sed -e "s/ -fstack-protector//"`
+%define setarch setarch %{_arch} -R
+%else
+%define setarch %{nil}
 %endif
 
-%configure --with-pop --with-sound --with-gtk
+%build
+CFLAGS="-DMAIL_USE_LOCKF $RPM_OPT_FLAGS" %configure --with-x-toolkit=gtk --with-sound --with-toolkit-scroll-bars
 
-%__make bootstrap
-%__make %{?_smp_mflags}
+%{setarch} %__make bootstrap
+%{setarch} %__make %{?_smp_mflags}
 
 # remove versioned file so that we end up with .1 suffix and only one DOC file
 rm src/emacs-%{version}.*
@@ -178,6 +189,9 @@ mkdir -p %{buildroot}%{site_lisp}
 install -m 0644 %SOURCE4 %{buildroot}%{site_lisp}/site-start.el
 install -m 0644 %SOURCE18 %{buildroot}%{site_lisp}
 
+mkdir -p %{buildroot}%{_datadir}/X11/app-defaults
+install -m 0644 %SOURCE2 %{buildroot}%{_datadir}/X11/app-defaults
+
 mv %{buildroot}%{_bindir}/{etags,etags.emacs}
 mv %{buildroot}%{_mandir}/man1/{ctags.1,gctags.1}
 mv %{buildroot}%{_mandir}/man1/{etags.1,etags.emacs.1}
@@ -185,9 +199,13 @@ mv %{buildroot}%{_bindir}/{ctags,gctags}
 
 # GNOME / KDE files
 mkdir -p %{buildroot}%{_datadir}/applications
-install -m 0644 %SOURCE1 %{buildroot}%{_datadir}/applications/gnu-emacs.desktop
-mkdir -p %{buildroot}%{_datadir}/pixmaps
-install -m 0644 %SOURCE2 %{buildroot}%{_datadir}/pixmaps/
+install -m 0644 %SOURCE1 %{buildroot}%{_datadir}/applications/emacs.desktop
+for i in 16 24 32 48
+do
+    mkdir -p %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps
+    install -m 0644 %{buildroot}%{_datadir}/emacs/%{version}/etc/images/icons/emacs_${i}.png \
+        %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps/emacs.png
+done
 
 # install site-lisp files
 install -m 0644 site-lisp/*.el{,c} %{buildroot}%{site_lisp}
@@ -232,16 +250,28 @@ rm -rf %{buildroot}
 %define info_files ada-mode autotype calc ccmode cl dired-x ebrowse ediff efaq eintr elisp0 elisp1 elisp emacs emacs-mime emacs-xtra erc eshell eudc flymake forms gnus idlwave info message mh-e newsticker org pcl-cvs pgg rcirc reftex sc ses sieve smtpmail speedbar tramp url viper vip widget woman
 
 %preun
-alternatives --remove emacs %{_bindir}/emacs-%{version}
+alternatives --remove emacs %{_bindir}/emacs-%{version} || :
 
 %posttrans
-alternatives --install %{_bindir}/emacs emacs %{_bindir}/emacs-%{version} 80
+alternatives --install %{_bindir}/emacs emacs %{_bindir}/emacs-%{version} 80 || :
+
+%post
+touch --no-create %{_datadir}/icons/hicolor
+if [ -x %{_bindir}/gtk-update-icon-cache ]; then
+  %{_bindir}/gtk-update-icon-cache --quiet %{_datadir}/icons/hicolor || :
+fi
 
 %preun nox
-alternatives --remove emacs %{_bindir}/emacs-%{version}-nox
+alternatives --remove emacs %{_bindir}/emacs-%{version}-nox || :
 
 %posttrans nox
 alternatives --install %{_bindir}/emacs emacs %{_bindir}/emacs-%{version}-nox 70
+
+%postun
+touch --no-create %{_datadir}/icons/hicolor
+if [ -x %{_bindir}/gtk-update-icon-cache ]; then
+  %{_bindir}/gtk-update-icon-cache --quiet %{_datadir}/icons/hicolor || :
+fi
 
 %post common
 for f in %{info_files}; do
@@ -249,12 +279,16 @@ for f in %{info_files}; do
 done
 
 %preun common
-alternatives --remove etags %{_bindir}/etags.emacs
+alternatives --remove etags %{_bindir}/etags.emacs || :
 if [ "$1" = 0 ]; then
   for f in %{info_files}; do
     /sbin/install-info --delete %{_infodir}/$f.gz %{_infodir}/dir 2> /dev/null || :
   done
 fi
+
+%posttrans common
+alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
+	--slave %{_mandir}/man1/etags.1.gz emacs.etags.man %{_mandir}/man1/etags.emacs.1.gz
 
 %files
 %defattr(-,root,root)
@@ -262,8 +296,9 @@ fi
 %dir %{_libexecdir}/emacs
 %dir %{_libexecdir}/emacs/%{version}
 %dir %{emacs_libexecdir}
-%{_datadir}/applications/gnu-emacs.desktop
-%{_datadir}/pixmaps/emacs.png 
+%{_datadir}/applications/emacs.desktop
+%{_datadir}/icons/hicolor/*/apps/emacs.png
+%{_datadir}/X11/app-defaults/Emacs
 
 %files nox
 %defattr(-,root,root)
@@ -295,6 +330,18 @@ fi
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Fri May 23 2008 Chip Coldwell <coldwell@redhat.com> 22.1-12
+- drop the old icon in favor of the new set from FSF, and rebuild the gtk
+  icon cache in the post and postun scriptlets.
+- add /usr/share/X11/app-defaults/Emacs and xorg-x11-fonts-75dpi dependency
+  to get sane screen display font
+- update to php-mode 1.4
+- drop the wrapper script; we use alternatives for better or worse now
+- patch rpm-spec-mode to use a real compilation mode
+- bring back setarch -R ... the dumper tries to detect address space
+  randomization and compensate on its own, but the heuristics aren't 100%
+- drop the files.el patch; this is now in the upstream tarball
+
 * Mon May  5 2008 Tom "spot" Callaway <tcallawa@redhat.com> 22.1-11
 - don't use smp_mflags on second make invocation
 
