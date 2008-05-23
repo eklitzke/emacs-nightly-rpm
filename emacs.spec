@@ -4,19 +4,19 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 22.2
-Release: 4%{?dist}
+Release: 5%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
 Source0: ftp://ftp.gnu.org/gnu/emacs/emacs-%{version}.tar.gz
 Source1: emacs.desktop
+Source2: Emacs
 Source3: dotemacs.el
 Source4: site-start.el
+Source6: http://cvs.xemacs.org/viewcvs.cgi/XEmacs/packages/xemacs-packages/prog-modes/rpm-spec-mode.el
 Source7: http://php-mode.svn.sourceforge.net/svnroot/php-mode/tags/php-mode-1.4.0/php-mode.el
 Source8: php-mode-init.el
 Source9: ssl.el
-# rpm-spec-mode from Xemacs
-Source10: http://cvs.xemacs.org/viewcvs.cgi/XEmacs/packages/xemacs-packages/prog-modes/rpm-spec-mode.el
 Source11: rpm-spec-mode-init.el
 Source13: focus-init.el
 Source14: po-mode.el
@@ -30,14 +30,17 @@ Patch2: po-mode-auto-replace-date-71264.patch
 Patch3: emacs-22.1.50-sparc64.patch
 Patch4: emacs-22.1.50-regex.patch
 Buildroot: %{_tmppath}/%{name}-%{version}-root
-BuildRequires: atk-devel, cairo-devel, freetype-devel, fontconfig-devel, giflib-devel, glibc-devel, gtk2-devel, libpng-devel
-BuildRequires: libjpeg-devel, libtiff-devel, libX11-devel, libXau-devel, libXdmcp-devel, libXrender-devel, libXt-devel
-BuildRequires: libXpm-devel, ncurses-devel, xorg-x11-proto-devel, zlib-devel
-BuildRequires: autoconf, automake, bzip2, cairo, texinfo
+BuildRequires: atk-devel, cairo-devel, dbus-devel, freetype-devel
+BuildRequires: fontconfig-devel, giflib-devel, glibc-devel, gtk2-devel
+BuildRequires: libpng-devel, libjpeg-devel, librsvg2-devel, libtiff-devel,
+BuildRequires: libX11-devel, libXau-devel, libXdmcp-devel, libXrender-devel
+BuildRequires: libXt-devel, libXpm-devel, m17n-lib-devel, ncurses-devel
+BuildRequires: xorg-x11-proto-devel, zlib-devel
+BuildRequires: texinfo >= 4.6
 %ifarch %{ix86}
 BuildRequires: setarch
 %endif
-Requires: xorg-x11-fonts-ISO8859-1-100dpi
+Requires: xorg-x11-fonts-75dpi
 Requires: emacs-common = %{epoch}:%{version}-%{release}
 Conflicts: gettext < 0.10.40
 Provides: emacs(bin)
@@ -109,8 +112,9 @@ Emacs packages or see some elisp examples.
 %patch4 -p1 -b .regexp
 
 # install rest of site-lisp files
-( cd site-lisp
-  cp %SOURCE7 %SOURCE9 %SOURCE10 %SOURCE14 %SOURCE20 .
+( ! [ -d site-lisp ] && mkdir site-lisp
+  cd site-lisp
+  cp %SOURCE6 %SOURCE7 %SOURCE9 %SOURCE14 %SOURCE20 .
   # rpm-spec-mode can use compilation-mode
   patch < %PATCH1
   # fix po-auto-replace-revision-date nil
@@ -128,6 +132,9 @@ rm -f lisp/play/tetris.el lisp/play/tetris.elc
 rm -f etc/sex.6 etc/condom.1 etc/celibacy.1 etc/COOKIES etc/future-bug etc/JOKES
 %endif
 
+# Turn off address space randomization for the dumper.  The dumper
+# tries to detect randomization and turn it off, but the heuristics
+# don't work reliably.
 %ifarch %{ix86}
 %define setarch setarch %{_arch} -R
 %else
@@ -135,11 +142,9 @@ rm -f etc/sex.6 etc/condom.1 etc/celibacy.1 etc/COOKIES etc/future-bug etc/JOKES
 %endif
 
 %build
-export CFLAGS="-DMAIL_USE_LOCKF $RPM_OPT_FLAGS"
+CFLAGS="-DMAIL_USE_LOCKF $RPM_OPT_FLAGS" %configure --with-x-toolkit=gtk --with-sound --with-toolkit-scroll-bars
 
-%configure --with-x-toolkit=gtk
-
-%__make bootstrap
+%{setarch} %__make bootstrap
 %{setarch} %__make %{?_smp_mflags}
 
 # remove versioned file so that we end up with .1 suffix and only one DOC file
@@ -151,7 +156,8 @@ TOPDIR=${PWD}
 # make sure patched lisp files get byte-compiled
 %emacsbatch -f batch-byte-compile site-lisp/*.el
 
-%__make %{?_smp_mflags} -C lisp updates
+# This seems to have issue with smp_mflags. :/
+%__make -C lisp updates
 
 # Create pkgconfig file
 cat > emacs.pc << EOF
@@ -187,10 +193,23 @@ mkdir -p %{buildroot}%{site_lisp}
 install -m 0644 %SOURCE4 %{buildroot}%{site_lisp}/site-start.el
 install -m 0644 %SOURCE18 %{buildroot}%{site_lisp}
 
+mkdir -p %{buildroot}%{_datadir}/X11/app-defaults
+install -m 0644 %SOURCE2 %{buildroot}%{_datadir}/X11/app-defaults
+
 mv %{buildroot}%{_bindir}/{etags,etags.emacs}
 mv %{buildroot}%{_mandir}/man1/{ctags.1,gctags.1}
 mv %{buildroot}%{_mandir}/man1/{etags.1,etags.emacs.1}
 mv %{buildroot}%{_bindir}/{ctags,gctags}
+
+# GNOME / KDE files
+mkdir -p %{buildroot}%{_datadir}/applications
+install -m 0644 %SOURCE1 %{buildroot}%{_datadir}/applications/emacs.desktop
+for i in 16 24 32 48
+do
+    mkdir -p %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps
+    install -m 0644 %{buildroot}%{_datadir}/emacs/%{version}/etc/images/icons/emacs_${i}.png \
+        %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps/emacs.png
+done
 
 # install site-lisp files
 install -m 0644 site-lisp/*.el{,c} %{buildroot}%{site_lisp}
@@ -209,17 +228,6 @@ install -m 0644 emacs.pc %{buildroot}/%{pkgconfig}
 # after everything is installed, remove info dir
 rm -f %{buildroot}%{_infodir}/dir
 rm %{buildroot}%{_localstatedir}/games/emacs/*
-
-# Open desktop application
-mkdir -p %{buildroot}%{_datadir}/applications
-install -m 0644 %SOURCE1 %{buildroot}%{_datadir}/applications/emacs.desktop
-
-# put the icons where they belong
-for i in 16 24 32 48 ; do
-   mkdir -p %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps
-   cp %{buildroot}%{_datadir}/emacs/%{version}/etc/images/icons/emacs_${i}.png \
-      %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps/emacs.png
-done
 
 #
 # create file lists
@@ -251,11 +259,23 @@ alternatives --remove emacs %{_bindir}/emacs-%{version} || :
 %posttrans
 alternatives --install %{_bindir}/emacs emacs %{_bindir}/emacs-%{version} 80 || :
 
+%post
+touch --no-create %{_datadir}/icons/hicolor
+if [ -x %{_bindir}/gtk-update-icon-cache ]; then
+  %{_bindir}/gtk-update-icon-cache --quiet %{_datadir}/icons/hicolor || :
+fi
+
 %preun nox
 alternatives --remove emacs %{_bindir}/emacs-%{version}-nox || :
 
 %posttrans nox
-alternatives --install %{_bindir}/emacs emacs %{_bindir}/emacs-%{version}-nox 70 || :
+alternatives --install %{_bindir}/emacs emacs %{_bindir}/emacs-%{version}-nox 70
+
+%postun
+touch --no-create %{_datadir}/icons/hicolor
+if [ -x %{_bindir}/gtk-update-icon-cache ]; then
+  %{_bindir}/gtk-update-icon-cache --quiet %{_datadir}/icons/hicolor || :
+fi
 
 %post common
 for f in %{info_files}; do
@@ -282,6 +302,7 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{emacs_libexecdir}
 %{_datadir}/applications/emacs.desktop
 %{_datadir}/icons/hicolor/*/apps/emacs.png
+%{_datadir}/X11/app-defaults/Emacs
 
 %files nox
 %defattr(-,root,root)
@@ -293,7 +314,7 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %files -f common-filelist common
 %defattr(-,root,root)
 %config(noreplace) %{_sysconfdir}/skel/.emacs
-%doc etc/NEWS BUGS README
+%doc etc/NEWS BUGS README 
 %exclude %{_bindir}/emacs-*
 %{_bindir}/*
 %{_mandir}/*/*
@@ -313,6 +334,19 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Fri May 23 2008 Chip Coldwell <coldwell@redhat.com> 1:22.2-5
+- drop the old icon in favor of the new set from FSF, and rebuild the gtk
+  icon cache in the post and postun scriptlets.
+- add /usr/share/X11/app-defaults/Emacs and xorg-x11-fonts-75dpi dependency
+  to get sane screen display font
+- update to php-mode 1.4
+- drop the wrapper script; we use alternatives for better or worse now
+- patch rpm-spec-mode to use a real compilation mode
+- bring back setarch -R ... the dumper tries to detect address space
+  randomization and compensate on its own, but the heuristics aren't 100%
+- drop the files.el patch; this is now in the upstream tarball
+- don't use smp_mflags on second make invocation
+
 * Thu May 01 2008 Tom "spot" Callaway <tcallawa@redhat.com>
 - fix requires to include epoch
 
