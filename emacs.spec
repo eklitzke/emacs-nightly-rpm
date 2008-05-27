@@ -261,6 +261,9 @@ if [ -x %{_bindir}/gtk-update-icon-cache ]; then
   %{_bindir}/gtk-update-icon-cache --quiet %{_datadir}/icons/hicolor || :
 fi
 
+%post
+gtk-update-icon-cache /usr/share/icons/hicolor >/dev/null 2>&1
+
 %preun nox
 alternatives --remove emacs %{_bindir}/emacs-%{version}-nox || :
 
