@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 22.3
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -50,6 +50,8 @@ Provides: emacs(bin)
 %define expurgate 0
 
 %define site_lisp %{_datadir}/emacs/site-lisp
+%define site_start_d %{site_lisp}/site-start.d
+%define bytecompargs -batch --no-init-file --no-site-file -f batch-byte-compile
 %define pkgconfig %{_datadir}/pkgconfig
 
 %description
@@ -149,7 +151,8 @@ TOPDIR=${PWD}
 %define emacsbatch ${TOPDIR}/src/emacs -batch --no-init-file --no-site-file
 
 # make sure patched lisp files get byte-compiled
-%emacsbatch -f batch-byte-compile site-lisp/*.el
+TOPDIR=${PWD}
+${TOPDIR}/src/emacs %{bytecompargs} site-lisp/*.el
 
 %__make %{?_smp_mflags} -C lisp updates
 
@@ -161,6 +164,15 @@ sitestartdir=%{site_lisp}/site-start.d
 Name: emacs
 Description: GNU Emacs text editor
 Version: %{epoch}:%{version}
+EOF
+
+# Create macros.emacs RPM macro file
+cat > macros.emacs << EOF
+%%_emacs_version %{version}
+%%_emacs_epoch %{epoch}
+%%_emacs_sitelispdir %{site_lisp}
+%%_emacs_sitestartdir %{site_start_d}
+%%_emacs_bytecompile /usr/bin/emacs %bytecompargs 
 EOF
 
 %install
@@ -205,6 +217,10 @@ install -m 0644 %SOURCE3 %{buildroot}%{_sysconfdir}/skel/.emacs
 # install pkgconfig file
 mkdir -p %{buildroot}/%{pkgconfig}
 install -m 0644 emacs.pc %{buildroot}/%{pkgconfig}
+
+# install rpm macro definition file
+mkdir -p %{buildroot}%{_sysconfdir}/rpm
+install -m 0644 macros.emacs %{buildroot}%{_sysconfdir}/rpm/
 
 # after everything is installed, remove info dir
 rm -f %{buildroot}%{_infodir}/dir
@@ -293,6 +309,7 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %files -f common-filelist common
 %defattr(-,root,root)
 %config(noreplace) %{_sysconfdir}/skel/.emacs
+%config(noreplace) %{_sysconfdir}/rpm/macros.emacs
 %doc etc/NEWS BUGS README
 %exclude %{_bindir}/emacs-*
 %{_bindir}/*
@@ -313,6 +330,9 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Sun Jan 18 2009 Jonathan G. Underwood <jonathan.underwood@gmail.com> - 1:22.3-2
+- Add /etc/rpm/macros.emacs file
+
 * Wed Dec 17 2008 Daniel Novotny <dnovotny@redhat.com> 22.3-1
 - update from 22.2 to 22.3 (bz#461448)
 - removed upstreamed patches
