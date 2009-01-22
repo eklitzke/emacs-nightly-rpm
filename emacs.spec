@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 22.3
-Release: 2%{?dist}
+Release: 3%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -37,7 +37,7 @@ BuildRequires: autoconf, automake, bzip2, cairo, texinfo
 %ifarch %{ix86}
 BuildRequires: setarch
 %endif
-Requires: xorg-x11-fonts-ISO8859-1-100dpi
+Requires: xorg-x11-fonts-ISO8859-1-75dpi
 Requires: emacs-common = %{epoch}:%{version}-%{release}
 Conflicts: gettext < 0.10.40
 Provides: emacs(bin)
@@ -330,6 +330,9 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Thu Jan 22 2009 Daniel Novotny <dnovotny@redhat.com> 1:22.3-3
+- font dependency changed from 100dpi to 75dpi (the font was too large)
+
 * Sun Jan 18 2009 Jonathan G. Underwood <jonathan.underwood@gmail.com> - 1:22.3-2
 - Add /etc/rpm/macros.emacs file
 
