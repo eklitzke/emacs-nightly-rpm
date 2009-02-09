@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 22.3
-Release: 3%{?dist}
+Release: 4%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -279,7 +279,7 @@ for f in %{info_files}; do
 done
 
 %preun common
-alternatives --remove etags %{_bindir}/etags.emacs || :
+alternatives --remove emacs.etags %{_bindir}/etags.emacs || :
 if [ "$1" = 0 ]; then
   for f in %{info_files}; do
     /sbin/install-info --delete %{_infodir}/$f.gz %{_infodir}/dir 2> /dev/null || :
@@ -330,6 +330,9 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Mon Feb 09 2009 Daniel Novotny <dnovotny@redhat.com> 1:22.3-4
+- fix bz#484309 (alternatives error message)
+
 * Thu Jan 22 2009 Daniel Novotny <dnovotny@redhat.com> 1:22.3-3
 - font dependency changed from 100dpi to 75dpi (the font was too large)
 
