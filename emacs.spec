@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 22.3
-Release: 11%{?dist}
+Release: 12%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -364,6 +364,9 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Thu Jun 11 2009 Daniel Novotny <dnovotny@redhat.com> 1:22:3-12
+- fix bz#505083 - rpm-add-change-log-entry date format rejected by rpmbuild
+
 * Fri Apr 10 2009 Daniel Novotny <dnovotny@redhat.com> 1:22.3-11
 - fix bz#443549 -  spell-buffer, flyspell-mode do not work
 
