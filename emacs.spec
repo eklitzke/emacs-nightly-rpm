@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 22.3
-Release: 12%{?dist}
+Release: 13%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -37,7 +37,8 @@ BuildRequires: autoconf, automake, bzip2, cairo, texinfo
 %ifarch %{ix86}
 BuildRequires: setarch
 %endif
-Requires: xorg-x11-fonts-ISO8859-1-100dpi
+Requires: xorg-x11-fonts-ISO8859-1-100dpi, xorg-x11-fonts-misc
+Requires: xorg-x11-fonts-ISO8859-1-75dpi
 Requires: emacs-common = %{epoch}:%{version}-%{release}
 Requires: hicolor-icon-theme
 Requires: hunspell
@@ -364,7 +365,10 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
-* Thu Jun 11 2009 Daniel Novotny <dnovotny@redhat.com> 1:22:3-12
+* Wed Jun 24 2009 Daniel Novotny <dnovotny@redhat.com> 1:22.3-13
+- added xorg-x11-fonts-misc to dependencies (#469220)
+
+* Thu Jun 11 2009 Daniel Novotny <dnovotny@redhat.com> 1:22.3-12
 - fix bz#505083 - rpm-add-change-log-entry date format rejected by rpmbuild
 
 * Fri Apr 10 2009 Daniel Novotny <dnovotny@redhat.com> 1:22.3-11
