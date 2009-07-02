@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 22.3
-Release: 13%{?dist}
+Release: 14%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -41,7 +41,7 @@ Requires: xorg-x11-fonts-ISO8859-1-100dpi, xorg-x11-fonts-misc
 Requires: xorg-x11-fonts-ISO8859-1-75dpi
 Requires: emacs-common = %{epoch}:%{version}-%{release}
 Requires: hicolor-icon-theme
-Requires: hunspell
+Requires: hunspell, aspell
 # Desktop integration
 BuildRequires: desktop-file-utils
 Requires:      desktop-file-utils
@@ -365,6 +365,10 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Thu Jul 02 2009 Daniel Novotny <dnovotny@redhat.com> 1:22.3-14
+- revoked default.el change (#508033)
+- added dependency: aspell (#443549)
+
 * Wed Jun 24 2009 Daniel Novotny <dnovotny@redhat.com> 1:22.3-13
 - added xorg-x11-fonts-misc to dependencies (#469220)
 
