@@ -3,8 +3,8 @@
 Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
-Version: 22.3
-Release: 14%{?dist}
+Version: 23.1
+Release: 1%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -22,25 +22,25 @@ Source13: focus-init.el
 Source14: po-mode.el
 Source15: po-mode-init.el
 Source18: default.el
-Source20: igrep.el
-Source21: igrep-init.el
 Patch0: glibc-open-macro.patch
 Patch1: rpm-spec-mode.patch
 Patch2: po-mode-auto-replace-date-71264.patch
 Patch3: rpm-spec-mode-utc.patch
-Patch4: emacsclient.patch
+#Patch4: emacsclient.patch
 Buildroot: %{_tmppath}/%{name}-%{version}-root
-BuildRequires: atk-devel, cairo-devel, freetype-devel, fontconfig-devel, giflib-devel, glibc-devel, gtk2-devel, libpng-devel
+BuildRequires: atk-devel, cairo-devel, desktop-file-utils, freetype-devel, fontconfig-devel, dbus-devel, giflib-devel, glibc-devel, gtk2-devel, libpng-devel
 BuildRequires: libjpeg-devel, libtiff-devel, libX11-devel, libXau-devel, libXdmcp-devel, libXrender-devel, libXt-devel
 BuildRequires: libXpm-devel, ncurses-devel, xorg-x11-proto-devel, zlib-devel
 BuildRequires: autoconf, automake, bzip2, cairo, texinfo
+BuildRequires: librsvg2-devel
+Requires: librsvg2
 %ifarch %{ix86}
 BuildRequires: setarch
 %endif
-Requires: xorg-x11-fonts-ISO8859-1-100dpi, xorg-x11-fonts-misc
-Requires: xorg-x11-fonts-ISO8859-1-75dpi
+#Requires: xorg-x11-fonts-ISO8859-1-100dpi, xorg-x11-fonts-misc
+#Requires: xorg-x11-fonts-ISO8859-1-75dpi
 Requires: emacs-common = %{epoch}:%{version}-%{release}
-Requires: hicolor-icon-theme
+#Requires: hicolor-icon-theme
 Requires: hunspell, aspell
 # Desktop integration
 BuildRequires: desktop-file-utils
@@ -113,11 +113,11 @@ Emacs packages or see some elisp examples.
 %prep
 %setup -q
 %patch0 -p1 -b .glibc-open-macro
-%patch4 -p1
+#%%patch4 -p1
 
 # install rest of site-lisp files
 ( cd site-lisp
-  cp %SOURCE7 %SOURCE9 %SOURCE10 %SOURCE14 %SOURCE20 .
+  cp %SOURCE7 %SOURCE9 %SOURCE10 %SOURCE14 .
   # rpm-spec-mode can use compilation-mode
   patch < %PATCH1
   # fix po-auto-replace-revision-date nil
@@ -132,6 +132,8 @@ cp %SOURCE1 etc/emacs.desktop
 # avoid trademark issues
 %if %{paranoid}
 rm -f lisp/play/tetris.el lisp/play/tetris.elc
+grep -v "tetris.elc" lisp/Makefile.in > lisp/Makefile.in.new \
+    && mv lisp/Makefile.in.new lisp/Makefile.in
 %endif
 
 %if %{expurgate}
@@ -147,7 +149,8 @@ rm -f etc/sex.6 etc/condom.1 etc/celibacy.1 etc/COOKIES etc/future-bug etc/JOKES
 %build
 export CFLAGS="-DMAIL_USE_LOCKF $RPM_OPT_FLAGS"
 
-%configure --with-x-toolkit=gtk
+%configure --with-dbus --with-gif --with-jpeg --with-png --with-rsvg \
+    --with-tiff --with-xft --with-xpm --with-x-toolkit=gtk
 
 %__make bootstrap
 %{setarch} %__make %{?_smp_mflags}
@@ -183,7 +186,7 @@ EOF
 %install
 rm -rf %{buildroot}
 
-%makeinstall
+make install INSTALL="%{__install} -p" DESTDIR=%{buildroot}
 
 # let alternatives manage the symlink
 rm %{buildroot}%{_bindir}/emacs
@@ -201,8 +204,8 @@ install -m 0755 src/emacs-%{version}.1 %{buildroot}%{_bindir}/emacs-%{version}-n
 chmod 755 %{buildroot}%{emacs_libexecdir}/movemail
 
 mkdir -p %{buildroot}%{site_lisp}
-install -m 0644 %SOURCE4 %{buildroot}%{site_lisp}/site-start.el
-install -m 0644 %SOURCE18 %{buildroot}%{site_lisp}
+install -p -m 0644 %SOURCE4 %{buildroot}%{site_lisp}/site-start.el
+install -p -m 0644 %SOURCE18 %{buildroot}%{site_lisp}
 
 mv %{buildroot}%{_bindir}/{etags,etags.emacs}
 mv %{buildroot}%{_mandir}/man1/{ctags.1,gctags.1}
@@ -210,37 +213,38 @@ mv %{buildroot}%{_mandir}/man1/{etags.1,etags.emacs.1}
 mv %{buildroot}%{_bindir}/{ctags,gctags}
 
 # install site-lisp files
-install -m 0644 site-lisp/*.el{,c} %{buildroot}%{site_lisp}
+install -p -m 0644 site-lisp/*.el{,c} %{buildroot}%{site_lisp}
 
 mkdir -p %{buildroot}%{site_lisp}/site-start.d
-install -m 0644 $RPM_SOURCE_DIR/*-init.el %{buildroot}%{site_lisp}/site-start.d
+install -p -m 0644 %SOURCE8 %SOURCE11 %SOURCE13 %SOURCE15 %{buildroot}%{site_lisp}/site-start.d
 
 # default initialization file
 mkdir -p %{buildroot}%{_sysconfdir}/skel
-install -m 0644 %SOURCE3 %{buildroot}%{_sysconfdir}/skel/.emacs
+install -p -m 0644 %SOURCE3 %{buildroot}%{_sysconfdir}/skel/.emacs
 
 # install pkgconfig file
 mkdir -p %{buildroot}/%{pkgconfig}
-install -m 0644 emacs.pc %{buildroot}/%{pkgconfig}
+install -p -m 0644 emacs.pc %{buildroot}/%{pkgconfig}
 
 # install rpm macro definition file
 mkdir -p %{buildroot}%{_sysconfdir}/rpm
-install -m 0644 macros.emacs %{buildroot}%{_sysconfdir}/rpm/
+install -p -m 0644 macros.emacs %{buildroot}%{_sysconfdir}/rpm/
 
 # after everything is installed, remove info dir
 rm -f %{buildroot}%{_infodir}/dir
 rm %{buildroot}%{_localstatedir}/games/emacs/*
 
 # install desktop file
+mkdir -p %{buildroot}%{_datadir}/applications
 desktop-file-install --dir=%{buildroot}%{_datadir}/applications \
                      %SOURCE1
 
 # put the icons where they belong
-for i in 16 24 32 48 ; do
-   mkdir -p %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps
-   cp %{buildroot}%{_datadir}/emacs/%{version}/etc/images/icons/emacs_${i}.png \
-      %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps/emacs.png
-done
+#for i in 16 24 32 48 ; do
+#   mkdir -p %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps
+#   cp %{buildroot}%{_datadir}/emacs/%{version}/etc/images/icons/emacs_${i}.png \
+#      %{buildroot}%{_datadir}/icons/hicolor/${i}x${i}/apps/emacs.png
+#done
 
 #
 # create file lists
@@ -310,14 +314,14 @@ alternatives --install %{_bindir}/emacs emacs %{_bindir}/emacs-%{version}-nox 70
 
 %post common
 for f in %{info_files}; do
-  /sbin/install-info %{_infodir}/$f.gz %{_infodir}/dir 2> /dev/null || :
+  /sbin/install-info %{_infodir}/$f %{_infodir}/dir 2> /dev/null || :
 done
 
 %preun common
 alternatives --remove emacs.etags %{_bindir}/etags.emacs || :
 if [ "$1" = 0 ]; then
   for f in %{info_files}; do
-    /sbin/install-info --delete %{_infodir}/$f.gz %{_infodir}/dir 2> /dev/null || :
+    /sbin/install-info --delete %{_infodir}/$f %{_infodir}/dir 2> /dev/null || :
   done
 fi
 
@@ -333,6 +337,9 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{emacs_libexecdir}
 %{_datadir}/applications/emacs.desktop
 %{_datadir}/icons/hicolor/*/apps/emacs.png
+%{_datadir}/icons/hicolor/*/apps/emacs22.png
+%{_datadir}/icons/hicolor/scalable/apps/emacs.svg
+%{_datadir}/icons/hicolor/scalable/mimetypes/emacs-document.svg
 
 %files nox
 %defattr(-,root,root)
@@ -365,6 +372,9 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Mon Aug 03 2009 Daniel Novotny <dnovotny@redhat.com> 1:23.1-1
+- new upstream version 23.1
+
 * Thu Jul 02 2009 Daniel Novotny <dnovotny@redhat.com> 1:22.3-14
 - revoked default.el change (#508033)
 - added dependency: aspell (#443549)
