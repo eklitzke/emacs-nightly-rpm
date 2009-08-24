@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 23.1
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -33,6 +33,7 @@ BuildRequires: libjpeg-devel, libtiff-devel, libX11-devel, libXau-devel, libXdmc
 BuildRequires: libXpm-devel, ncurses-devel, xorg-x11-proto-devel, zlib-devel
 BuildRequires: autoconf, automake, bzip2, cairo, texinfo
 BuildRequires: librsvg2-devel
+BuildRequires: alsa-lib-devel, libotf
 Requires: librsvg2
 %ifarch %{ix86}
 BuildRequires: setarch
@@ -372,6 +373,9 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Mon Aug 24 2009 Daniel Novotny <dnovotny@redhat.com> 1:23.1-2
+- added alsa to BuildRequires (#518659), also libotf
+
 * Mon Aug 03 2009 Daniel Novotny <dnovotny@redhat.com> 1:23.1-1
 - new upstream version 23.1
 
