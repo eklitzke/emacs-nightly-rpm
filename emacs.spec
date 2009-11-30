@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 23.1
-Release: 11%{?dist}
+Release: 12%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -28,6 +28,7 @@ Patch2: po-mode-auto-replace-date-71264.patch
 Patch3: rpm-spec-mode-utc.patch
 Patch4: emacs-gtk.patch
 Patch5: emacs-23.1-xdg.patch
+Patch6: emacs-23.1-cpp.patch
 
 Buildroot: %{_tmppath}/%{name}-%{version}-root
 BuildRequires: atk-devel, cairo-devel, desktop-file-utils, freetype-devel, fontconfig-devel, dbus-devel, giflib-devel, glibc-devel, gtk2-devel, libpng-devel
@@ -119,6 +120,7 @@ Emacs packages or see some elisp examples.
 %patch0 -p1 -b .glibc-open-macro
 %patch4 -p1 -b .gtk
 %patch5 -p1 -b .xdg
+%patch6 -p1
 
 # install rest of site-lisp files
 ( cd site-lisp
@@ -162,6 +164,8 @@ fi
 %build
 export CFLAGS="-DMAIL_USE_LOCKF $RPM_OPT_FLAGS"
 
+#we patch configure.in so we have to do this
+autoconf
 %configure --with-dbus --with-gif --with-jpeg --with-png --with-rsvg \
    --with-tiff --with-xft --with-xpm --with-x-toolkit=gtk
 
@@ -379,6 +383,9 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Mon Nov 30 2009 Daniel Novotny <dnovotny@redhat.com> 1:23.1-12
+- fixed FTBFS in F12 and higher (#540921)
+
 * Wed Oct 14 2009 Jonathan G. Underwood <jonathan.underwood@gmail.com> - 1:23.1-11
 - Bump release to fix tagging problem
 
