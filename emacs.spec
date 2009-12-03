@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 23.1
-Release: 6%{?dist}
+Release: 7%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -26,6 +26,7 @@ Patch0: glibc-open-macro.patch
 Patch1: rpm-spec-mode.patch
 Patch2: po-mode-auto-replace-date-71264.patch
 Patch3: rpm-spec-mode-utc.patch
+Patch4: emacs-23.1-indian.patch
 #Patch4: emacsclient.patch
 Buildroot: %{_tmppath}/%{name}-%{version}-root
 BuildRequires: atk-devel, cairo-devel, desktop-file-utils, freetype-devel, fontconfig-devel, dbus-devel, giflib-devel, glibc-devel, gtk2-devel, libpng-devel
@@ -48,6 +49,7 @@ BuildRequires: desktop-file-utils
 Requires:      desktop-file-utils
 Conflicts: gettext < 0.10.40
 Provides: emacs(bin)
+Requires: m17n-db-datafiles
 
 Obsoletes: emacs-nxml-mode < 0.20041004-10
 Provides: emacs-nxml-mode = 0.20041004-10
@@ -117,7 +119,7 @@ Emacs packages or see some elisp examples.
 %prep
 %setup -q
 %patch0 -p1 -b .glibc-open-macro
-#%%patch4 -p1
+%patch4 -p1
 
 # install rest of site-lisp files
 ( cd site-lisp
@@ -382,6 +384,9 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Thu Dec 03 2009 Daniel Novotny <dnovotny@redhat.com> 1:23.1-7
+- fix #542657 -  emacs does not display indic text
+
 * Wed Oct 14 2009 Jonathan G. Underwood <jonathan.underwood@gmail.com> - 1:23.1-6
 - Update macros.xemacs to treat epoch correctly and be consistent with xemacs package
 - Use site_start_d macro consistently
