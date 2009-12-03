@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 23.1
-Release: 13%{?dist}
+Release: 14%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -30,6 +30,7 @@ Patch4: emacs-gtk.patch
 Patch5: emacs-23.1-xdg.patch
 Patch6: emacs-23.1-cpp.patch
 Patch7: emacs-23.1-scroll.patch
+Patch8: emacs-23.1-indian.patch
 
 Buildroot: %{_tmppath}/%{name}-%{version}-root
 BuildRequires: atk-devel, cairo-devel, desktop-file-utils, freetype-devel, fontconfig-devel, dbus-devel, giflib-devel, glibc-devel, gtk2-devel, libpng-devel
@@ -53,6 +54,7 @@ BuildRequires: desktop-file-utils
 Requires:      desktop-file-utils
 Conflicts: gettext < 0.10.40
 Provides: emacs(bin)
+Requires: m17n-db-datafiles
 
 # C and build patches
 
@@ -123,6 +125,7 @@ Emacs packages or see some elisp examples.
 %patch5 -p1 -b .xdg
 %patch6 -p1
 %patch7 -p1 -b .scroll
+%patch8 -p1
 
 # install rest of site-lisp files
 ( cd site-lisp
@@ -385,6 +388,9 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Thu Dec 03 2009 Daniel Novotny <dnovotny@redhat.com> 1:23.1-14
+- fix #542657 -  emacs does not display indic text
+
 * Wed Dec 02 2009 Daniel Novotny <dnovotny@redhat.com> 1:23.1-13
 - fix #543046 -  Using scroll bar in emacs highlights/selects text
 
