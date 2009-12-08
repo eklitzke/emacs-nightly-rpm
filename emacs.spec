@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 23.1
-Release: 14%{?dist}
+Release: 15%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -31,6 +31,7 @@ Patch5: emacs-23.1-xdg.patch
 Patch6: emacs-23.1-cpp.patch
 Patch7: emacs-23.1-scroll.patch
 Patch8: emacs-23.1-indian.patch
+Patch9: emacs-23.1-memmove.patch
 
 Buildroot: %{_tmppath}/%{name}-%{version}-root
 BuildRequires: atk-devel, cairo-devel, desktop-file-utils, freetype-devel, fontconfig-devel, dbus-devel, giflib-devel, glibc-devel, gtk2-devel, libpng-devel
@@ -126,6 +127,7 @@ Emacs packages or see some elisp examples.
 %patch6 -p1
 %patch7 -p1 -b .scroll
 %patch8 -p1
+%patch9 -p1 -b .memmove
 
 # install rest of site-lisp files
 ( cd site-lisp
@@ -388,6 +390,9 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Tue Dec  8 2009 Karel Klic <kklic@redhat.com> 1:23.1-15
+- Fixed rhbz#545398 - ETags messes up filenames
+
 * Thu Dec 03 2009 Daniel Novotny <dnovotny@redhat.com> 1:23.1-14
 - fix #542657 -  emacs does not display indic text
 
