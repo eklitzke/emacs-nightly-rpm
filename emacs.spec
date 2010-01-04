@@ -392,7 +392,7 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
-* Mon Jan  4 2009 Karel Klic <kklic@redhat.com> 1:23.1-16
+* Mon Jan  4 2010 Karel Klic <kklic@redhat.com> 1:23.1-16
 - Fixed rhbz#517272 - emacs-23.1 update shows fonts in double the normal size
 
 * Tue Dec  8 2009 Karel Klic <kklic@redhat.com> 1:23.1-15
