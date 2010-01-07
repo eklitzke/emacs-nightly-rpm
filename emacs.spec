@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 23.1
-Release: 16%{?dist}
+Release: 17%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -392,6 +392,9 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Thu Jan  7 2010 Karel Klic <kklic@redhat.com> 1:23.1-17
+- Simpler fix for rhbz#517272
+
 * Mon Jan  4 2010 Karel Klic <kklic@redhat.com> 1:23.1-16
 - Fixed rhbz#517272 - emacs-23.1 update shows fonts in double the normal size
 
