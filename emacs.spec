@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 23.1
-Release: 7%{?dist}
+Release: 8%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -28,6 +28,11 @@ Patch2: po-mode-auto-replace-date-71264.patch
 Patch3: rpm-spec-mode-utc.patch
 Patch4: emacs-23.1-indian.patch
 #Patch4: emacsclient.patch
+
+# Fix https://bugzilla.redhat.com/show_bug.cgi?id=547566
+# Reported upstream: http://debbugs.gnu.org/cgi/bugreport.cgi?bug=5313
+Patch5: emacs-23.1-hexl-mode.patch
+
 Buildroot: %{_tmppath}/%{name}-%{version}-root
 BuildRequires: atk-devel, cairo-devel, desktop-file-utils, freetype-devel, fontconfig-devel, dbus-devel, giflib-devel, glibc-devel, gtk2-devel, libpng-devel
 BuildRequires: libjpeg-devel, libtiff-devel, libX11-devel, libXau-devel, libXdmcp-devel, libXrender-devel, libXt-devel
@@ -120,6 +125,7 @@ Emacs packages or see some elisp examples.
 %setup -q
 %patch0 -p1 -b .glibc-open-macro
 %patch4 -p1
+%patch5 -p0
 
 # install rest of site-lisp files
 ( cd site-lisp
@@ -384,6 +390,9 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Thu Jan 14 2010 Jonathan G. Underwood <jonathan.underwood@gmail.com> 1:23.1-8
+- Add patch to fix rhbz#547566 (from Juanma Barranquero)
+
 * Thu Dec 03 2009 Daniel Novotny <dnovotny@redhat.com> 1:23.1-7
 - fix #542657 -  emacs does not display indic text
 
