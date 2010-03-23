@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 23.1
-Release: 18%{?dist}
+Release: 19%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -16,7 +16,7 @@ Source7: http://php-mode.svn.sourceforge.net/svnroot/php-mode/tags/php-mode-1.4.
 Source8: php-mode-init.el
 Source9: ssl.el
 # rpm-spec-mode from XEmacs
-Source10: http://cvs.xemacs.org/viewcvs.cgi/*checkout*/XEmacs/packages/xemacs-packages/prog-modes/rpm-spec-mode.el
+Source10: rpm-spec-mode.el
 Source11: rpm-spec-mode-init.el
 Source13: focus-init.el
 Source14: po-mode.el
@@ -28,10 +28,15 @@ Patch2: po-mode-auto-replace-date-71264.patch
 Patch3: rpm-spec-mode-utc.patch
 Patch4: emacs-gtk.patch
 Patch5: emacs-23.1-xdg.patch
+# Fixed in upstream CVS.
 Patch6: emacs-23.1-cpp.patch
 Patch7: emacs-23.1-scroll.patch
 Patch8: emacs-23.1-indian.patch
+# Fixed in upstream CVS
 Patch9: emacs-23.1-memmove.patch
+# Taken from upstream GIT repository
+# http://git.savannah.gnu.org/cgit/emacs.git/diff/src/xsettings.c?id=b3a25b88e82569f916712c635207c8bdd590e13b
+# rhbz#517272
 Patch10: emacs-23.1-fontdpi.patch
 
 # Fix https://bugzilla.redhat.com/show_bug.cgi?id=547566
@@ -42,7 +47,7 @@ Buildroot: %{_tmppath}/%{name}-%{version}-root
 BuildRequires: atk-devel, cairo-devel, desktop-file-utils, freetype-devel, fontconfig-devel, dbus-devel, giflib-devel, glibc-devel, gtk2-devel, libpng-devel
 BuildRequires: libjpeg-devel, libtiff-devel, libX11-devel, libXau-devel, libXdmcp-devel, libXrender-devel, libXt-devel
 BuildRequires: libXpm-devel, ncurses-devel, xorg-x11-proto-devel, zlib-devel
-BuildRequires: autoconf, automake, bzip2, cairo, texinfo
+BuildRequires: autoconf, automake, bzip2, cairo, texinfo, gzip
 %ifarch %{ix86}
 BuildRequires: setarch
 %endif
@@ -60,7 +65,9 @@ BuildRequires: desktop-file-utils
 Requires:      desktop-file-utils
 Conflicts: gettext < 0.10.40
 Provides: emacs(bin)
-Requires: m17n-db-datafiles
+# #516391
+Obsoletes: emacs-nxml-mode < 0.20041004-10
+Provides: emacs-nxml-mode = 0.20041004-10
 
 # C and build patches
 
@@ -100,7 +107,9 @@ on a terminal.
 %package common
 Summary: Emacs common files
 Group: Applications/Editors
-PreReq: /sbin/install-info, dev, %{_sbindir}/alternatives
+Requires(preun): %{_sbindir}/alternatives, /sbin/install-info, dev
+Requires(posttrans): %{_sbindir}/alternatives
+Requires(post): /sbin/install-info, dev
 Obsoletes: emacs-leim
 
 %description common
@@ -212,7 +221,7 @@ cat > macros.emacs << EOF
 %%_emacs_evr %{?epoch:%{epoch}:}%{version}-%{release}
 %%_emacs_sitelispdir %{site_lisp}
 %%_emacs_sitestartdir %{site_start_d}
-%%_emacs_bytecompile /usr/bin/emacs %bytecompargs 
+%%_emacs_bytecompile /usr/bin/emacs -batch --no-init-file --no-site-file --eval '(progn (setq load-path (cons "." load-path)))' -f batch-byte-compile
 EOF
 
 %install
@@ -222,6 +231,10 @@ make install INSTALL="%{__install} -p" DESTDIR=%{buildroot}
 
 # let alternatives manage the symlink
 rm %{buildroot}%{_bindir}/emacs
+
+# do not compress the files which implement compression itself (#484830)
+gunzip %{buildroot}%{_datadir}/emacs/%{version}/lisp/jka-compr.el.gz
+gunzip %{buildroot}%{_datadir}/emacs/%{version}/lisp/jka-cmpr-hook.el.gz
 
 # rebuild without X support
 # remove the versioned binary with X support so that we end up with .1 suffix for emacs-nox too
@@ -238,6 +251,11 @@ chmod 755 %{buildroot}%{emacs_libexecdir}/movemail
 mkdir -p %{buildroot}%{site_lisp}
 install -p -m 0644 %SOURCE4 %{buildroot}%{site_lisp}/site-start.el
 install -p -m 0644 %SOURCE18 %{buildroot}%{site_lisp}
+
+#this solves bz#474958, "update-directory-autoloads" now finally works
+#the path is different each version, so we'll generate it here
+echo "(setq source-directory \"%{_datadir}/emacs/%{version}/\")" \
+ >> %{buildroot}%{site_lisp}/site-start.el
 
 mv %{buildroot}%{_bindir}/{etags,etags.emacs}
 mv %{buildroot}%{_mandir}/man1/{ctags.1,gctags.1}
@@ -397,6 +415,11 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Tue Mar 23 2010 Jonathan G. Underwood <jonathan.underwood@gmail.com> - 1:23.1-19
+- Backport fixes for bugs 516391, 484830, 474958 from F-13 branch
+- Add cwd to load-path in byte-compile macro for add-on packaging
+- Add some commentary to spec file
+
 * Thu Jan 14 2010 Jonathan G. Underwood <jonathan.underwood@gmail.com> 1:23.1-18
 - Add patch to fix rhbz#547566 (from Juanma Barranquero)
 
