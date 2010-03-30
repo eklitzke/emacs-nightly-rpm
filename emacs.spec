@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 23.1
-Release: 10%{?dist}
+Release: 11%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -26,7 +26,7 @@ Patch0: glibc-open-macro.patch
 Patch1: rpm-spec-mode.patch
 Patch2: po-mode-auto-replace-date-71264.patch
 Patch3: rpm-spec-mode-utc.patch
-Patch4: emacs-gtk.patch
+
 Patch5: emacs-23.1-xdg.patch
 # Fixed in upstream CVS.
 Patch6: emacs-23.1-cpp.patch
@@ -142,7 +142,6 @@ Emacs packages or see some elisp examples.
 %prep
 %setup -q
 %patch0 -p1 -b .glibc-open-macro
-%patch4 -p1 -b .gtk
 %patch5 -p1 -b .xdg
 %patch6 -p1
 %patch7 -p1 -b .scroll
@@ -421,6 +420,9 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Tue Mar 30 2010 Jonathan G. Underwood <jonathan.underwood@gmail.com> - 1:23.1-11
+- Backout unneeded gtk patch
+
 * Tue Mar 30 2010 Jonathan G. Underwood <jonathan.underwood@gmail.com> - 1:23.1-10
 - Update rpm-spec-mode.el and friends
 
