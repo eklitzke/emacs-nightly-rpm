@@ -423,7 +423,7 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 
 %changelog
 * Tue Mar 30 2010 Jonathan G. Underwood <jonathan.underwood@gmail.com> - 1:23.1-20
-- Add fix for BZ 53346 
+- Add fix for BZ 553346 
 
 * Tue Mar 23 2010 Jonathan G. Underwood <jonathan.underwood@gmail.com> - 1:23.1-19
 - Backport fixes for bugs 516391, 484830, 474958 from F-13 branch
