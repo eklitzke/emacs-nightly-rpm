@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 23.1
-Release: 19%{?dist}
+Release: 20%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -42,6 +42,12 @@ Patch10: emacs-23.1-fontdpi.patch
 # Fix https://bugzilla.redhat.com/show_bug.cgi?id=547566
 # Reported upstream: http://debbugs.gnu.org/cgi/bugreport.cgi?bug=5313
 Patch11: emacs-23.1-hexl-mode.patch
+
+# Fix https://bugzilla.redhat.com/show_bug.cgi?id=553346
+# Upstream: http://emacsbugs.donarmstrong.com/cgi-bin/bugreport.cgi?bug=2840
+# Backported fix from upstream:
+# http://bazaar.launchpad.net/~vcs-imports/emacs/trunk/revision/98299
+Patch12: emacs-23.1-nxml.patch
 
 Buildroot: %{_tmppath}/%{name}-%{version}-root
 BuildRequires: atk-devel, cairo-devel, desktop-file-utils, freetype-devel, fontconfig-devel, dbus-devel, giflib-devel, glibc-devel, gtk2-devel, libpng-devel
@@ -144,6 +150,7 @@ Emacs packages or see some elisp examples.
 %patch9 -p1 -b .memmove
 %patch10 -p1 -b .fontdpi
 %patch11 -p0
+%patch12 -p0
 
 # install rest of site-lisp files
 ( cd site-lisp
@@ -415,6 +422,9 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Tue Mar 30 2010 Jonathan G. Underwood <jonathan.underwood@gmail.com> - 1:23.1-20
+- Add fix for BZ 53346 
+
 * Tue Mar 23 2010 Jonathan G. Underwood <jonathan.underwood@gmail.com> - 1:23.1-19
 - Backport fixes for bugs 516391, 484830, 474958 from F-13 branch
 - Add cwd to load-path in byte-compile macro for add-on packaging
