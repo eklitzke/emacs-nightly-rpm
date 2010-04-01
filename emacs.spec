@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 23.1
-Release: 12%{?dist}
+Release: 13%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -154,6 +154,7 @@ Emacs packages or see some elisp examples.
 %patch10 -p1 -b .fontdpi
 %patch11 -p0
 %patch12 -p0
+%patch13 -p1
 
 # install rest of site-lisp files
 ( cd site-lisp
@@ -424,6 +425,9 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Thu Apr  1 2010 Jonathan G. Underwood <jonathan.underwood@gmail.com> - 1:23.1-13
+- Really apply the movemail patch!
+
 * Thu Apr  1 2010 Jonathan G. Underwood <jonathan.underwood@gmail.com> - 1:23.1-12
 - Add patch to fix RHBZ #578272 - security vulnerability with movemail
   (CVE-2010-0825) 
