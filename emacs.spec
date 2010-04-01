@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 23.1.94
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -29,7 +29,10 @@ Patch2: po-mode-auto-replace-date-71264.patch
 Patch3: rpm-spec-mode-utc.patch
 Patch4: emacs-23.1-xdg.patch
 
-Buildroot: %{_tmppath}/%{name}-%{version}-root
+# Fix https://bugzilla.redhat.com/show_bug.cgi?id=578272
+# CVE-2010-0825
+Patch5: emacs-23.1-movemail.patch
+
 BuildRequires: atk-devel, cairo-devel, desktop-file-utils, freetype-devel, fontconfig-devel, dbus-devel, giflib-devel, glibc-devel, gtk2-devel, libpng-devel
 BuildRequires: libjpeg-devel, libtiff-devel, libX11-devel, libXau-devel, libXdmcp-devel, libXrender-devel, libXt-devel
 BuildRequires: libXpm-devel, ncurses-devel, xorg-x11-proto-devel, zlib-devel
@@ -45,12 +48,12 @@ Requires: hunspell, aspell
 # bz#507852
 BuildRequires: librsvg2-devel, m17n-lib-devel, libotf-devel
 BuildRequires: alsa-lib-devel
-Requires: librsvg2
+
 # Desktop integration
 BuildRequires: desktop-file-utils
 Requires:      desktop-file-utils
 Conflicts: gettext < 0.10.40
-Provides: emacs(bin)
+Provides: emacs(bin) = %{epoch}:%{version}-%{release}
 # #516391
 Obsoletes: emacs-nxml-mode < 0.20041004-10
 Provides: emacs-nxml-mode = 0.20041004-10
@@ -88,7 +91,7 @@ This package provides an emacs binary with support for X windows.
 Summary: GNU Emacs text editor without X support
 Group: Applications/Editors
 Requires: emacs-common = %{epoch}:%{version}-%{release}
-Provides: emacs(bin)
+Provides: emacs(bin) = %{epoch}:%{version}-%{release}
 
 %description nox
 Emacs is a powerful, customizable, self-documenting, modeless text
@@ -105,7 +108,6 @@ Group: Applications/Editors
 Requires(preun): %{_sbindir}/alternatives, /sbin/install-info, dev
 Requires(posttrans): %{_sbindir}/alternatives
 Requires(post): /sbin/install-info, dev
-Obsoletes: emacs-leim
 
 %description common
 Emacs is a powerful, customizable, self-documenting, modeless text
@@ -116,7 +118,7 @@ without leaving the editor.
 This package contains all the common files needed by emacs or emacs-nox.
 
 %package el
-Summary: Emacs Lisp source files included with Emacs.
+Summary: Lisp source files included with GNU Emacs
 Group: Applications/Editors
 
 %description el
@@ -130,19 +132,19 @@ Emacs packages or see some elisp examples.
 
 %prep
 %setup -q
+
 %patch0 -p1 -b .glibc-open-macro
 %patch4 -p1 -b .xdg
 
-# install rest of site-lisp files
-( cd site-lisp
-  cp %SOURCE7 %SOURCE9 %SOURCE10 %SOURCE14 .
-  # rpm-spec-mode can use compilation-mode
-  patch < %PATCH1
-  # fix po-auto-replace-revision-date nil
-  patch < %PATCH2 
-  # rpm-spec-mode: added rpm-change-log-uses-utc variable
-  patch < %PATCH3
-  )
+# Install site-lisp files
+cp %SOURCE7 %SOURCE9 %SOURCE10 %SOURCE14 site-lisp
+pushd site-lisp
+%patch1 -p0
+%patch2 -p0
+%patch3 -p0
+popd
+
+%patch5 -p1
 
 # we prefer our emacs.desktop file
 cp %SOURCE1 etc/emacs.desktop
@@ -177,20 +179,28 @@ export CFLAGS="-DMAIL_USE_LOCKF $RPM_OPT_FLAGS"
 
 #we patch configure.in so we have to do this
 autoconf
+
+# Build GTK+2 binary
+mkdir build-gtk && cd build-gtk
+ln -s ../configure .
 %configure --with-dbus --with-gif --with-jpeg --with-png --with-rsvg \
-   --with-tiff --with-xft --with-xpm --with-x-toolkit=gtk
+           --with-tiff --with-xft --with-xpm --with-x-toolkit=gtk
+make bootstrap
+%{setarch} make %{?_smp_mflags}
+cd ..
 
-%__make bootstrap
-%{setarch} %__make %{?_smp_mflags}
+# Build binary without X support
+mkdir build-nox && cd build-nox
+ln -s ../configure .
+%configure --with-x=no
+%{setarch} make %{?_smp_mflags}
+cd ..
 
-# remove versioned file so that we end up with .1 suffix and only one DOC file
-rm src/emacs-%{version}.*
+# Make sure patched lisp files get byte-compiled
+build-gtk/src/emacs %{bytecompargs} site-lisp/*.el
 
-# make sure patched lisp files get byte-compiled
-TOPDIR=${PWD}
-${TOPDIR}/src/emacs %{bytecompargs} site-lisp/*.el
-
-%__make %{?_smp_mflags} -C lisp updates
+# Remove versioned file so that we end up with .1 suffix and only one DOC file
+rm build-{gtk,nox}/src/emacs-%{version}.*
 
 # Create pkgconfig file
 cat > emacs.pc << EOF
@@ -215,7 +225,9 @@ EOF
 %install
 rm -rf %{buildroot}
 
+cd build-gtk
 make install INSTALL="%{__install} -p" DESTDIR=%{buildroot}
+cd ..
 
 # let alternatives manage the symlink
 rm %{buildroot}%{_bindir}/emacs
@@ -224,14 +236,8 @@ rm %{buildroot}%{_bindir}/emacs
 gunzip %{buildroot}%{_datadir}/emacs/%{version}/lisp/jka-compr.el.gz
 gunzip %{buildroot}%{_datadir}/emacs/%{version}/lisp/jka-cmpr-hook.el.gz
 
-# rebuild without X support
-# remove the versioned binary with X support so that we end up with .1 suffix for emacs-nox too
-rm src/emacs-%{version}.*
-%configure --without-x
-%__make %{?_smp_mflags}
-
 # install the emacs without X
-install -p -m 0755 src/emacs-%{version}.1 %{buildroot}%{_bindir}/emacs-%{version}-nox
+install -p -m 0755 build-nox/src/emacs %{buildroot}%{_bindir}/emacs-%{version}-nox
 
 # make sure movemail isn't setgid
 chmod 755 %{buildroot}%{emacs_libexecdir}/movemail
@@ -322,32 +328,12 @@ fi
 alternatives --remove emacs %{_bindir}/emacs-%{version} || :
 
 %posttrans
-#check if there is "remainder" old version, which was not deleted
-# the check can be removed for Fedora 14, as the bug it handled was
-# present only in some old Emacs package version
-if alternatives --display emacs > /dev/null; then
-VER=$(alternatives --display emacs | sed -ne 's/.*emacs-\([0-9\.]\+\).*/\1/p' | head -1)
-if [ ${VER} != %{version} ]; then
-alternatives --remove emacs %{_bindir}/emacs-${VER} || :
-fi
-fi
-#end check
 alternatives --install %{_bindir}/emacs emacs %{_bindir}/emacs-%{version} 80 || :
 
 %preun nox
 alternatives --remove emacs %{_bindir}/emacs-%{version}-nox || :
 
 %posttrans nox
-#check if there is "remainder" old version, which was not deleted
-# the check can be removed for Fedora 14, as the bug it handled was
-# present only in some old Emacs package version
-if alternatives --display emacs > /dev/null; then
-VER=$(alternatives --display emacs | sed -ne 's/.*emacs-\([0-9\.]\+\).*/\1/p' | head -1)
-if [ ${VER} != %{version} ]; then
-alternatives --remove emacs %{_bindir}/emacs-${VER}-nox || :
-fi
-fi
-#end check
 alternatives --install %{_bindir}/emacs emacs %{_bindir}/emacs-%{version}-nox 70 || :
 
 %post common
@@ -411,6 +397,20 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Thu Apr  1 2010 Jonathan G. Underwood <jonathan.underwood@gmail.com> - 1:23.1.94-2
+- Add patch to fix RHBZ #578272 - security vulnerability with movemail
+  (CVE-2010-0825) 
+- Use standard %%patch macro to apply all patches to silent rpmlint warnings
+- Remove unnecessary buildroot tag
+- Remove explicit dependency on librsvg2 (but keep BuildRequires for
+  librsvg2-devel)
+- Add properly versioned Provides for emacs(bin)
+- Remove long unneeded Obsoletes for emacs-leim
+- Fix summary for emacs-el
+- Use out of tree builds so that we can build multibple versions in the
+  %%build section 
+- Remove checks for old version of Emacs in postrtrans
+
 * Mon Mar 22 2010 Karel Klic <kklic@redhat.com> - 1:23.1.94-1
 - Update to 23.2 pretest version
 - Removed patches applied by upstream
@@ -783,7 +783,7 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
   emacs-21-personality-linux32-101818.patch from cvs (Jan Djärv)
   which also turns off address randomization during dumping (Masatake Yamato)
   - no longer need to pass SETARCH to make on i386 (#160814)
-- move ownership of %%{_datadir}/emacs/ and %%{_datadir}/emacs/%{version}/
+- move ownership of %%{_datadir}/emacs/ and %%{_datadir}/emacs/%%{version}/
   from emacs to emacs-el and emacs-leim subpackages
 - don't build tramp html and dvi documentation
 - drop src/config.in part of bzero-and-have-stdlib.dpatch to avoid
