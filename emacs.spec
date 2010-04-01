@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 23.1
-Release: 11%{?dist}
+Release: 12%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -48,6 +48,10 @@ Patch11: emacs-23.1-hexl-mode.patch
 # Backported fix from upstream:
 # http://bazaar.launchpad.net/~vcs-imports/emacs/trunk/revision/98299
 Patch12: emacs-23.1-nxml.patch
+
+# Fix https://bugzilla.redhat.com/show_bug.cgi?id=578272
+# CVE-2010-0825
+Patch13: emacs-23.1-movemail.patch
 
 Buildroot: %{_tmppath}/%{name}-%{version}-root
 BuildRequires: atk-devel, cairo-devel, desktop-file-utils, freetype-devel, fontconfig-devel, dbus-devel, giflib-devel, glibc-devel, gtk2-devel, libpng-devel
@@ -420,6 +424,10 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Thu Apr  1 2010 Jonathan G. Underwood <jonathan.underwood@gmail.com> - 1:23.1-12
+- Add patch to fix RHBZ #578272 - security vulnerability with movemail
+  (CVE-2010-0825) 
+
 * Tue Mar 30 2010 Jonathan G. Underwood <jonathan.underwood@gmail.com> - 1:23.1-11
 - Backout unneeded gtk patch
 
