@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 23.1.96
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -33,6 +33,8 @@ BuildRequires: atk-devel, cairo-devel, desktop-file-utils, freetype-devel, fontc
 BuildRequires: libjpeg-devel, libtiff-devel, libX11-devel, libXau-devel, libXdmcp-devel, libXrender-devel, libXt-devel
 BuildRequires: libXpm-devel, ncurses-devel, xorg-x11-proto-devel, zlib-devel
 BuildRequires: autoconf, automake, bzip2, cairo, texinfo, gzip
+BuildRequires: GConf2-devel
+
 %ifarch %{ix86}
 BuildRequires: setarch
 %endif
@@ -391,6 +393,9 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Sun Apr 25 2010 Jonathan G. Underwood <jonathan.underwood@gmail.com> - 1:23.1.96-2
+- Add BuildRequires for GConf2-devel to build in Gconf2 support (RHBZ #585447)
+
 * Tue Apr 20 2010 Karel Klic <kklic@redhat.com> - 1:23.1.96-1
 - Updated to the newest prerelease
 - Remove -movemail patch as it has been merged by upstream
