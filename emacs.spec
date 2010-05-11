@@ -3,13 +3,12 @@
 Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
-Version: 23.1.96
-Release: 2%{?dist}
+Version: 23.2
+Release: 1%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
-#Source0: ftp://ftp.gnu.org/gnu/emacs/emacs-%{version}.tar.bz2
-Source0: ftp://alpha.gnu.org/gnu/emacs/pretest/emacs-%{version}.tar.gz
+Source0: ftp://ftp.gnu.org/gnu/emacs/emacs-%{version}.tar.bz2
 Source1: emacs.desktop
 Source3: dotemacs.el
 Source4: site-start.el
@@ -28,6 +27,8 @@ Patch1: rpm-spec-mode.patch
 Patch2: po-mode-auto-replace-date-71264.patch
 Patch3: rpm-spec-mode-utc.patch
 Patch4: emacs-23.1-xdg.patch
+# Accepted by upstream.
+Patch5: emacs-23.2-m17ncheck.patch
 
 BuildRequires: atk-devel, cairo-devel, desktop-file-utils, freetype-devel, fontconfig-devel, dbus-devel, giflib-devel, glibc-devel, gtk2-devel, libpng-devel
 BuildRequires: libjpeg-devel, libtiff-devel, libX11-devel, libXau-devel, libXdmcp-devel, libXrender-devel, libXt-devel
@@ -133,6 +134,7 @@ Emacs packages or see some elisp examples.
 
 %patch0 -p1 -b .glibc-open-macro
 %patch4 -p1 -b .xdg
+%patch5 -p1 -b .m17ncheck
 
 # Install site-lisp files
 cp %SOURCE7 %SOURCE9 %SOURCE10 %SOURCE14 site-lisp
@@ -393,6 +395,10 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Tue May 11 2010 Karel Klic <kklic@redhat.com> - 1:23.2-1
+- Updated the prerelase to final version
+- Added a patch fixing m17n and libotf version checking (m17ncheck)
+
 * Sun Apr 25 2010 Jonathan G. Underwood <jonathan.underwood@gmail.com> - 1:23.1.96-2
 - Add BuildRequires for GConf2-devel to build in Gconf2 support (RHBZ #585447)
 
