@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 23.2
-Release: 1%{?dist}
+Release: 2%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -22,6 +22,9 @@ Source13: focus-init.el
 Source14: po-mode.el
 Source15: po-mode-init.el
 Source18: default.el
+# Emacs Terminal Mode, #551949
+Source19: emacs-terminal.desktop
+Source20: emacs-terminal.sh
 Patch0: glibc-open-macro.patch
 Patch1: rpm-spec-mode.patch
 Patch2: po-mode-auto-replace-date-71264.patch
@@ -63,7 +66,7 @@ BuildRequires: python2-devel python3-devel
 
 # Turn off the brp-python-bytecompile script since this script doesn't
 # properly dtect the correct python runtime for the files emacs2.py and
-# emacs3.py 
+# emacs3.py
 %global __os_install_post %(echo '%{__os_install_post}' | sed -e 's!/usr/lib[^[:space:]]*/brp-python-bytecompile[[:space:]].*$!!g')
 
 # C and build patches
@@ -272,14 +275,19 @@ install -p -m 0644 emacs.pc %{buildroot}/%{pkgconfig}
 mkdir -p %{buildroot}%{_sysconfdir}/rpm
 install -p -m 0644 macros.emacs %{buildroot}%{_sysconfdir}/rpm/
 
+# installing emacs-terminal binary
+install -p -m 755 %SOURCE20 %{buildroot}%{_bindir}/emacs-terminal
+
 # after everything is installed, remove info dir
 rm -f %{buildroot}%{_infodir}/dir
 rm %{buildroot}%{_localstatedir}/games/emacs/*
 
-# install desktop file
+# install desktop files
 mkdir -p %{buildroot}%{_datadir}/applications
 desktop-file-install --dir=%{buildroot}%{_datadir}/applications \
                      %SOURCE1
+desktop-file-install --dir=%{buildroot}%{_datadir}/applications \
+                     %SOURCE19
 
 # Byte compile emacs*.py with correct python interpreters
 %py_byte_compile %{__python} %{buildroot}%{_datadir}/%{name}/%{version}/etc/emacs.py
@@ -354,10 +362,12 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %files
 %defattr(-,root,root)
 %{_bindir}/emacs-%{version}
+%{_bindir}/emacs-terminal
 %dir %{_libexecdir}/emacs
 %dir %{_libexecdir}/emacs/%{version}
 %dir %{emacs_libexecdir}
 %{_datadir}/applications/emacs.desktop
+%{_datadir}/applications/emacs-terminal.desktop
 %{_datadir}/icons/hicolor/*/apps/emacs.png
 %{_datadir}/icons/hicolor/*/apps/emacs22.png
 %{_datadir}/icons/hicolor/scalable/apps/emacs.svg
@@ -395,6 +405,9 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Wed May 19 2010 Naveen Kumar <nkumar@redhat.com> - 1:23.2-2
+- Added a desktop file for adding terminal mode to menu (RHBZ #551949)
+
 * Tue May 11 2010 Karel Klic <kklic@redhat.com> - 1:23.2-1
 - Updated the prerelase to final version
 - Added a patch fixing m17n and libotf version checking (m17ncheck)
