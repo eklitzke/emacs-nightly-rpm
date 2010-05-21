@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 23.1
-Release: 21%{?dist}
+Release: 22%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -22,6 +22,9 @@ Source13: focus-init.el
 Source14: po-mode.el
 Source15: po-mode-init.el
 Source18: default.el
+# Emacs Terminal Mode, #551949
+Source19: emacs-terminal.desktop
+Source20: emacs-terminal.sh
 Patch0: glibc-open-macro.patch
 Patch1: rpm-spec-mode.patch
 Patch2: po-mode-auto-replace-date-71264.patch
@@ -292,14 +295,19 @@ install -p -m 0644 emacs.pc %{buildroot}/%{pkgconfig}
 mkdir -p %{buildroot}%{_sysconfdir}/rpm
 install -p -m 0644 macros.emacs %{buildroot}%{_sysconfdir}/rpm/
 
+# installing emacs-terminal binary
+install -p -m 755 %SOURCE20 %{buildroot}%{_bindir}/emacs-terminal
+
 # after everything is installed, remove info dir
 rm -f %{buildroot}%{_infodir}/dir
 rm %{buildroot}%{_localstatedir}/games/emacs/*
 
-# install desktop file
+# install desktop files
 mkdir -p %{buildroot}%{_datadir}/applications
 desktop-file-install --dir=%{buildroot}%{_datadir}/applications \
                      %SOURCE1
+desktop-file-install --dir=%{buildroot}%{_datadir}/applications \
+                     %SOURCE19
 
 
 #
@@ -386,10 +394,12 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %files
 %defattr(-,root,root)
 %{_bindir}/emacs-%{version}
+%{_bindir}/emacs-terminal
 %dir %{_libexecdir}/emacs
 %dir %{_libexecdir}/emacs/%{version}
 %dir %{emacs_libexecdir}
 %{_datadir}/applications/emacs.desktop
+%{_datadir}/applications/emacs-terminal.desktop
 %{_datadir}/icons/hicolor/*/apps/emacs.png
 %{_datadir}/icons/hicolor/*/apps/emacs22.png
 %{_datadir}/icons/hicolor/scalable/apps/emacs.svg
@@ -427,6 +437,9 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Wed May 19 2010 Naveen Kumar <nkumar@redhat.com> - 1:23.1-22
+- Added a desktop file for adding terminal mode to menu (RHBZ #551949)
+
 * Thu Apr  1 2010 Jonathan G. Underwood <jonathan.underwood@gmail.com> - 1:23.1-21
 - Add patch to fix RHBZ #578272 - security vulnerability with movemail
   (CVE-2010-0825) 
