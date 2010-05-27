@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 23.2
-Release: 2%{?dist}
+Release: 3%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -32,6 +32,9 @@ Patch3: rpm-spec-mode-utc.patch
 Patch4: emacs-23.1-xdg.patch
 # Accepted by upstream.
 Patch5: emacs-23.2-m17ncheck.patch
+# Fix rhbz#595546
+# Upstream: http://emacsbugs.donarmstrong.com/cgi/bugreport.cgi?bug=6158
+Patch6: emacs-23.2-hideshow-comment.patch
 
 BuildRequires: atk-devel, cairo-devel, desktop-file-utils, freetype-devel, fontconfig-devel, dbus-devel, giflib-devel, glibc-devel, gtk2-devel, libpng-devel
 BuildRequires: libjpeg-devel, libtiff-devel, libX11-devel, libXau-devel, libXdmcp-devel, libXrender-devel, libXt-devel
@@ -138,6 +141,7 @@ Emacs packages or see some elisp examples.
 %patch0 -p1 -b .glibc-open-macro
 %patch4 -p1 -b .xdg
 %patch5 -p1 -b .m17ncheck
+%patch6 -p0 -b .hideshow-comment
 
 # Install site-lisp files
 cp %SOURCE7 %SOURCE9 %SOURCE10 %SOURCE14 site-lisp
@@ -405,6 +409,10 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Thu May 27 2010 Karel Klíč <karel@agata> - 1:23.2-3
+- Add patch to fix rhbz#595546 hideshow library matches wrong parenthesis
+  under certain circumstances
+
 * Wed May 19 2010 Naveen Kumar <nkumar@redhat.com> - 1:23.2-2
 - Added a desktop file for adding terminal mode to menu (RHBZ #551949)
 
