@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 23.1
-Release: 22%{?dist}
+Release: 23%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -41,21 +41,20 @@ Patch9: emacs-23.1-memmove.patch
 # http://git.savannah.gnu.org/cgit/emacs.git/diff/src/xsettings.c?id=b3a25b88e82569f916712c635207c8bdd590e13b
 # rhbz#517272
 Patch10: emacs-23.1-fontdpi.patch
-
 # Fix https://bugzilla.redhat.com/show_bug.cgi?id=547566
 # Reported upstream: http://debbugs.gnu.org/cgi/bugreport.cgi?bug=5313
 Patch11: emacs-23.1-hexl-mode.patch
-
 # Fix https://bugzilla.redhat.com/show_bug.cgi?id=553346
 # Upstream: http://emacsbugs.donarmstrong.com/cgi-bin/bugreport.cgi?bug=2840
 # Backported fix from upstream:
 # http://bazaar.launchpad.net/~vcs-imports/emacs/trunk/revision/98299
 Patch12: emacs-23.1-nxml.patch
-
 # Fix https://bugzilla.redhat.com/show_bug.cgi?id=578272
 # CVE-2010-0825
 Patch13: emacs-23.1-movemail.patch
-
+# Fix https://bugzilla.redhat.com/show_bug.cgi?id=595546
+# Upstream: http://emacsbugs.donarmstrong.com/cgi/bugreport.cgi?bug=6158
+Patch14: emacs-23.1-hideshow-comment.patch
 Buildroot: %{_tmppath}/%{name}-%{version}-root
 BuildRequires: atk-devel, cairo-devel, desktop-file-utils, freetype-devel, fontconfig-devel, dbus-devel, giflib-devel, glibc-devel, gtk2-devel, libpng-devel
 BuildRequires: libjpeg-devel, libtiff-devel, libX11-devel, libXau-devel, libXdmcp-devel, libXrender-devel, libXt-devel
@@ -159,6 +158,7 @@ Emacs packages or see some elisp examples.
 %patch11 -p0
 %patch12 -p0
 %patch13 -p1
+%patch14 -p0
 
 # install rest of site-lisp files
 ( cd site-lisp
@@ -437,6 +437,10 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Thu May 27 2010 Karel Klíč <kklic@redhat.com> - 1:23.1-23
+- Add patch to fix rhbz#595546 hideshow library matches wrong parenthesis
+  under certain circumstances
+
 * Wed May 19 2010 Naveen Kumar <nkumar@redhat.com> - 1:23.1-22
 - Added a desktop file for adding terminal mode to menu (RHBZ #551949)
 
