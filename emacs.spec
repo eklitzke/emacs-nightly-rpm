@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 23.1
-Release: 23%{?dist}
+Release: 24%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -55,6 +55,8 @@ Patch13: emacs-23.1-movemail.patch
 # Fix https://bugzilla.redhat.com/show_bug.cgi?id=595546
 # Upstream: http://emacsbugs.donarmstrong.com/cgi/bugreport.cgi?bug=6158
 Patch14: emacs-23.1-hideshow-comment.patch
+# Reported upstream http://debbugs.gnu.org/cgi/bugreport.cgi?bug=4129
+Patch15: emacs-23.1-spacing.patch
 Buildroot: %{_tmppath}/%{name}-%{version}-root
 BuildRequires: atk-devel, cairo-devel, desktop-file-utils, freetype-devel, fontconfig-devel, dbus-devel, giflib-devel, glibc-devel, gtk2-devel, libpng-devel
 BuildRequires: libjpeg-devel, libtiff-devel, libX11-devel, libXau-devel, libXdmcp-devel, libXrender-devel, libXt-devel
@@ -159,6 +161,7 @@ Emacs packages or see some elisp examples.
 %patch12 -p0
 %patch13 -p1
 %patch14 -p0
+%patch15 -p1 -b .spacing
 
 # install rest of site-lisp files
 ( cd site-lisp
@@ -437,6 +440,9 @@ alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
 %dir %{_datadir}/emacs/%{version}
 
 %changelog
+* Thu Jun  3 2010 Karel Klic  <kklic@redhat.com> - 1:23.1-24
+- Fixed handling of dual spacing fonts rhbz#599437
+
 * Thu May 27 2010 Karel Klíč <kklic@redhat.com> - 1:23.1-23
 - Add patch to fix rhbz#595546 hideshow library matches wrong parenthesis
   under certain circumstances
