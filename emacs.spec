@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 23.2
-Release: 8%{?dist}
+Release: 9%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -432,6 +432,9 @@ update-desktop-database &> /dev/null || :
 %{_datadir}/applications/emacs-terminal.desktop
 
 %changelog
+* Mon Aug 16 2010 Karel Klic <kklic@redhat.com> - 1:23.2-9
+- Removed the png extension from the Icon entry in emacs.desktop (rhbz#507231)
+
 * Mon Aug  2 2010 Karel Klic <kklic@redhat.com> - 1:23.2-8
 - Moved the terminal desktop menu item to a separate package (rhbz#617355)
 
