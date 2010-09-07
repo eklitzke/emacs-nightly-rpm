@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 23.2
-Release: 9%{?dist}
+Release: 10%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -54,8 +54,6 @@ Requires: hunspell, aspell
 BuildRequires: librsvg2-devel, m17n-lib-devel, libotf-devel
 BuildRequires: alsa-lib-devel
 
-# Desktop integration
-BuildRequires: desktop-file-utils
 Requires:      desktop-file-utils
 Conflicts: gettext < 0.10.40
 Provides: emacs(bin) = %{epoch}:%{version}-%{release}
@@ -432,6 +430,9 @@ update-desktop-database &> /dev/null || :
 %{_datadir}/applications/emacs-terminal.desktop
 
 %changelog
+* Mon Sep 7 2010 Karel Klic <kklic@redhat.com> - 1:23.2-10
+- Rebuild
+
 * Mon Aug 16 2010 Karel Klic <kklic@redhat.com> - 1:23.2-9
 - Removed the png extension from the Icon entry in emacs.desktop (rhbz#507231)
 
