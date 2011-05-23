@@ -103,7 +103,7 @@ Summary: Emacs common files
 Group: Applications/Editors
 Requires(preun): /sbin/install-info, dev
 Requires(preun): %{_sbindir}/alternatives
-Requires(porttrans): %{_sbindir}/alternatives
+Requires(posttrans): %{_sbindir}/alternatives
 Requires(post): /sbin/install-info, dev
 Requires: %{name}-filesystem
 
