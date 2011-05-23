@@ -47,7 +47,7 @@ BuildRequires: desktop-file-utils
 # brp-python-bytecompile script
 BuildRequires: python2-devel python3-devel
 %ifarch %{ix86}
-BuildRequires: setarch
+BuildRequires: util-linux
 %endif
 Requires: desktop-file-utils
 Requires(preun): %{_sbindir}/alternatives
@@ -447,6 +447,7 @@ update-desktop-database &> /dev/null || :
   The current process loses alternatives preference on every upgrade,
   but there seems to be no elegant way how to prevent this while
   having versioned binaries (/bin/emacs-%%{version}) at the same time.
+- Depend on util-linux directly, as the package no longer provides setarch
 
 * Tue Feb 08 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1:23.2-18
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild
