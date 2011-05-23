@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 23.2
-Release: 9%{?dist}
+Release: 10%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -57,6 +57,8 @@ BuildRequires: alsa-lib-devel
 # Desktop integration
 BuildRequires: desktop-file-utils
 Requires:      desktop-file-utils
+Requires(preun): %{_sbindir}/alternatives
+Requires(posttrans): %{_sbindir}/alternatives
 Conflicts: gettext < 0.10.40
 Provides: emacs(bin) = %{epoch}:%{version}-%{release}
 
@@ -92,6 +94,8 @@ This package provides an emacs binary with support for X windows.
 %package nox
 Summary: GNU Emacs text editor without X support
 Group: Applications/Editors
+Requires(preun): %{_sbindir}/alternatives
+Requires(posttrans): %{_sbindir}/alternatives
 Requires: emacs-common = %{epoch}:%{version}-%{release}
 Provides: emacs(bin) = %{epoch}:%{version}-%{release}
 
@@ -252,6 +256,7 @@ cd ..
 
 # let alternatives manage the symlink
 rm %{buildroot}%{_bindir}/emacs
+touch %{buildroot}%{_bindir}/emacs
 
 # do not compress the files which implement compression itself (#484830)
 gunzip %{buildroot}%{_datadir}/emacs/%{version}/lisp/jka-compr.el.gz
@@ -348,16 +353,16 @@ if [ -x %{_bindir}/gtk-update-icon-cache ] ; then
 fi
 
 %preun
-alternatives --remove emacs %{_bindir}/emacs-%{version} || :
+%{_sbindir}/alternatives --remove emacs %{_bindir}/emacs-%{version}
 
 %posttrans
-alternatives --install %{_bindir}/emacs emacs %{_bindir}/emacs-%{version} 80 || :
+%{_sbindir}/alternatives --install %{_bindir}/emacs emacs %{_bindir}/emacs-%{version} 80
 
 %preun nox
-alternatives --remove emacs %{_bindir}/emacs-%{version}-nox || :
+%{_sbindir}/alternatives --remove emacs %{_bindir}/emacs-%{version}-nox
 
 %posttrans nox
-alternatives --install %{_bindir}/emacs emacs %{_bindir}/emacs-%{version}-nox 70 || :
+%{_sbindir}/alternatives --install %{_bindir}/emacs emacs %{_bindir}/emacs-%{version}-nox 70
 
 %post common
 for f in %{info_files}; do
@@ -365,7 +370,7 @@ for f in %{info_files}; do
 done
 
 %preun common
-alternatives --remove emacs.etags %{_bindir}/etags.emacs || :
+%{_sbindir}/alternatives --remove emacs.etags %{_bindir}/etags.emacs
 if [ "$1" = 0 ]; then
   for f in %{info_files}; do
     /sbin/install-info --delete %{_infodir}/$f %{_infodir}/dir 2> /dev/null || :
@@ -373,7 +378,7 @@ if [ "$1" = 0 ]; then
 fi
 
 %posttrans common
-alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
+%{_sbindir}/alternatives --install %{_bindir}/etags emacs.etags %{_bindir}/etags.emacs 80 \
        --slave %{_mandir}/man1/etags.1.gz emacs.etags.man %{_mandir}/man1/etags.emacs.1.gz
 
 %post terminal
@@ -385,6 +390,7 @@ update-desktop-database &> /dev/null || :
 %files
 %defattr(-,root,root)
 %{_bindir}/emacs-%{version}
+%attr(0755,-,-) %ghost %{_bindir}/emacs
 %dir %{_libexecdir}/emacs
 %dir %{_libexecdir}/emacs/%{version}
 %dir %{emacs_libexecdir}
@@ -397,6 +403,7 @@ update-desktop-database &> /dev/null || :
 %files nox
 %defattr(-,root,root)
 %{_bindir}/emacs-%{version}-nox
+%attr(0755,-,-) %ghost %{_bindir}/emacs
 %dir %{_libexecdir}/emacs
 %dir %{_libexecdir}/emacs/%{version}
 %dir %{emacs_libexecdir}
@@ -432,6 +439,12 @@ update-desktop-database &> /dev/null || :
 %{_datadir}/applications/emacs-terminal.desktop
 
 %changelog
+* Mon May 23 2011 Karel Klíč <kklic@redhat.com> - 1:23.2-10
+- Fix the handling of alternatives
+  The current process loses alternatives preference on every upgrade,
+  but there seems to be no elegant way how to prevent this while
+  having versioned binaries (/bin/emacs-%%{version}) at the same time.
+
 * Mon Aug 16 2010 Karel Klic <kklic@redhat.com> - 1:23.2-9
 - Removed the png extension from the Icon entry in emacs.desktop (rhbz#507231)
 
