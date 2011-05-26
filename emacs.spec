@@ -4,7 +4,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 23.2
-Release: 10%{?dist}
+Release: 11%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -413,8 +413,13 @@ update-desktop-database &> /dev/null || :
 %config(noreplace) %{_sysconfdir}/skel/.emacs
 %config(noreplace) %{_sysconfdir}/rpm/macros.emacs
 %doc etc/NEWS BUGS README etc/COPYING
-%exclude %{_bindir}/emacs-*
-%{_bindir}/*
+%{_bindir}/b2m
+%{_bindir}/ebrowse
+%{_bindir}/emacsclient
+%{_bindir}/etags.emacs
+%{_bindir}/gctags
+%{_bindir}/grep-changelog
+%{_bindir}/rcs-checkin
 %{_mandir}/*/*
 %{_infodir}/*
 %dir %{_datadir}/emacs
@@ -439,6 +444,9 @@ update-desktop-database &> /dev/null || :
 %{_datadir}/applications/emacs-terminal.desktop
 
 %changelog
+* Thu May 26 2011 Karel Klíč <kklic@redhat.com> - 1:23.2-11
+- Do not include /usr/bin/emacs in emacs-common
+
 * Mon May 23 2011 Karel Klíč <kklic@redhat.com> - 1:23.2-10
 - Fix the handling of alternatives
   The current process loses alternatives preference on every upgrade,
