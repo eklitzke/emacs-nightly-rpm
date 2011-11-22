@@ -458,12 +458,6 @@ update-desktop-database &> /dev/null || :
 - New upstream release
 - Depend on util-linux directly, as the package no longer provides setarch
 
-* Mon May 23 2011 Karel Klíč <kklic@redhat.com> - 1:23.2-19
-- Fix the handling of alternatives (rhbz#684447)
-  The current process loses alternatives preference on every upgrade,
-  but there seems to be no elegant way how to prevent this while
-  having versioned binaries (/bin/emacs-%%{version}) at the same time.
-
 * Tue Feb 08 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1:23.2-18
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild
 
