@@ -2,8 +2,8 @@
 Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
-Version: 23.2
-Release: 19%{?dist}
+Version: 23.3
+Release: 7%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -28,13 +28,9 @@ Patch1: rpm-spec-mode.patch
 Patch3: rpm-spec-mode-utc.patch
 # Upstream implemented the change in revno. 101105
 Patch4: emacs-23.1-xdg.patch
-# Accepted by upstream.
-Patch5: emacs-23.2-m17ncheck.patch
 # Fix rhbz#595546
 # Upstream: http://emacsbugs.donarmstrong.com/cgi/bugreport.cgi?bug=6158
 Patch6: emacs-23.2-hideshow-comment.patch
-# Reported upstream http://debbugs.gnu.org/cgi/bugreport.cgi?bug=4129
-Patch7: emacs-23.2-spacing.patch
 BuildRequires: atk-devel, cairo-devel, freetype-devel, fontconfig-devel, dbus-devel, giflib-devel, glibc-devel, gtk2-devel, libpng-devel
 BuildRequires: libjpeg-devel, libtiff-devel, libX11-devel, libXau-devel, libXdmcp-devel, libXrender-devel, libXt-devel
 BuildRequires: libXpm-devel, ncurses-devel, xorg-x11-proto-devel, zlib-devel
@@ -153,9 +149,7 @@ packages that add functionality to Emacs.
 
 %patch0 -p1 -b .glibc-open-macro
 %patch4 -p1 -b .xdg
-%patch5 -p1 -b .m17ncheck
 %patch6 -p0 -b .hideshow-comment
-%patch7 -p1 -b .spacing
 
 # Install site-lisp files
 cp %SOURCE7 %SOURCE9 %SOURCE10 site-lisp
@@ -242,8 +236,6 @@ cat > macros.emacs << EOF
 EOF
 
 %install
-rm -rf %{buildroot}
-
 cd build-gtk
 make install INSTALL="%{__install} -p" DESTDIR=%{buildroot}
 cd ..
@@ -385,12 +377,8 @@ update-desktop-database &> /dev/null || :
 update-desktop-database &> /dev/null || :
 
 %files
-%defattr(-,root,root)
 %{_bindir}/emacs-%{version}
 %attr(0755,-,-) %ghost %{_bindir}/emacs
-%dir %{_libexecdir}/emacs
-%dir %{_libexecdir}/emacs/%{version}
-%dir %{emacs_libexecdir}
 %{_datadir}/applications/emacs.desktop
 %{_datadir}/applications/emacsclient.desktop
 %{_datadir}/icons/hicolor/*/apps/emacs.png
@@ -399,21 +387,20 @@ update-desktop-database &> /dev/null || :
 %{_datadir}/icons/hicolor/scalable/mimetypes/emacs-document.svg
 
 %files nox
-%defattr(-,root,root)
 %{_bindir}/emacs-%{version}-nox
 %attr(0755,-,-) %ghost %{_bindir}/emacs
-%dir %{_libexecdir}/emacs
-%dir %{_libexecdir}/emacs/%{version}
-%dir %{emacs_libexecdir}
 
 %files -f common-filelist common
-%defattr(-,root,root)
 %config(noreplace) %{_sysconfdir}/skel/.emacs
 %config(noreplace) %{_sysconfdir}/rpm/macros.emacs
 %doc etc/NEWS BUGS README etc/COPYING
-%exclude %{_bindir}/emacs-*
-%{_bindir}/*
-%exclude %{_bindir}/emacs
+%{_bindir}/b2m
+%{_bindir}/ebrowse
+%{_bindir}/emacsclient
+%{_bindir}/etags.emacs
+%{_bindir}/gctags
+%{_bindir}/grep-changelog
+%{_bindir}/rcs-checkin
 %{_mandir}/*/*
 %{_infodir}/*
 %dir %{_datadir}/emacs/%{version}
@@ -425,29 +412,57 @@ update-desktop-database &> /dev/null || :
 %attr(0644,root,root) %config %{_datadir}/emacs/site-lisp/site-start.el
 
 %files -f el-filelist el
-%defattr(-,root,root)
 %{pkgconfig}/emacs.pc
 %doc etc/COPYING
 %dir %{_datadir}/emacs/%{version}
 
 %files terminal
-%defattr(-,root,root)
 %{_bindir}/emacs-terminal
 %{_datadir}/applications/emacs-terminal.desktop
 
 %files filesystem
-%defattr(-,root,root)
 %dir %{_datadir}/emacs
 %dir %{_datadir}/emacs/site-lisp
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
+* Thu Jun 30 2011 Ville Skyttä <ville.skytta@iki.fi> - 1:23.3-7
+- Use custom-set-variables for customizable variables in .emacs (#716440).
+- Move frame-title-format default from .emacs to default.el (#716443).
+
+* Thu May 26 2011 Karel Klíč <kklic@redhat.com> - 1:23.3-6
+- Enumerate binaries in emacs-common to avoid packaging single binary
+  multiple times by accident
+
+* Mon May 23 2011 Karel Klíč <kklic@redhat.com> - 1:23.3-5
+- Removed %%defattr from %%files sections, as RPM no longer needs it
+- Removed %%dir %%{_libexecdir}/emacs and similar from emacs and
+  emacs-nox packages, as the directories are used and present only in
+  emacs-common (rhbz#704067)
+
+* Tue Mar 22 2011 Karel Klic <kklic@redhat.com> - 1:23.3-4
+- Rebuild to fix an RPM issue (rhbz689182)
+
+* Tue Mar 15 2011 Ville Skyttä <ville.skytta@iki.fi> - 1:23.3-3
+- Use UTC timestamps in rpm-spec-mode changelog entries by default (rhbz#672350)
+- Consider *.elc in addition to *.el when loading files from site-start.d (rhbz#672324)
+
+* Tue Mar 15 2011 Karel Klic <kklic@redhat.com> - 1:23.3-2
+- Another attempt to fix the handling of alternatives (rhbz#684447)
+  The current process loses alternatives preference on every upgrade,
+  but there seems to be no elegant way how to prevent this while
+  having versioned binaries (/bin/emacs-%%{version}) at the same time.
+- Removed 'rm -rf %%{buildroot}' from %%install section
+
+* Thu Mar 10 2011 Karel Klic <kklic@redhat.com> - 1:23.3-1
+- New upstream release
+- Depend on util-linux directly, as the package no longer provides setarch
+
 * Mon May 23 2011 Karel Klíč <kklic@redhat.com> - 1:23.2-19
 - Fix the handling of alternatives (rhbz#684447)
   The current process loses alternatives preference on every upgrade,
   but there seems to be no elegant way how to prevent this while
   having versioned binaries (/bin/emacs-%%{version}) at the same time.
-- Depend on util-linux directly, as the package no longer provides setarch
 
 * Tue Feb 08 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1:23.2-18
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild
