@@ -3,7 +3,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 23.3
-Release: 7%{?dist}
+Release: 8%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -31,6 +31,12 @@ Patch4: emacs-23.1-xdg.patch
 # Fix rhbz#595546
 # Upstream: http://emacsbugs.donarmstrong.com/cgi/bugreport.cgi?bug=6158
 Patch6: emacs-23.2-hideshow-comment.patch
+# rhbz#711739
+# http://bzr.savannah.gnu.org/lh/emacs/trunk/revision/106247
+Patch7: emacs-wm-state-hidden.patch
+# http://lists.gnu.org/archive/html/emacs-devel/2012-01/msg00387.html
+Patch8: emacs-ede-cve-2012-0035.patch
+
 BuildRequires: atk-devel, cairo-devel, freetype-devel, fontconfig-devel, dbus-devel, giflib-devel, glibc-devel, gtk2-devel, libpng-devel
 BuildRequires: libjpeg-devel, libtiff-devel, libX11-devel, libXau-devel, libXdmcp-devel, libXrender-devel, libXt-devel
 BuildRequires: libXpm-devel, ncurses-devel, xorg-x11-proto-devel, zlib-devel
@@ -150,6 +156,8 @@ packages that add functionality to Emacs.
 %patch0 -p1 -b .glibc-open-macro
 %patch4 -p1 -b .xdg
 %patch6 -p0 -b .hideshow-comment
+%patch7 -p1 -b .wm-state-hidden
+%patch8 -p1 -b .ede-cve-2012-0035
 
 # Install site-lisp files
 cp %SOURCE7 %SOURCE9 %SOURCE10 site-lisp
@@ -426,6 +434,10 @@ update-desktop-database &> /dev/null || :
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
+* Thu Jan 12 2012 Karel Klíč <kklic@redhat.com> - 1:23.3-8
+- Added patch to handle CVE-2012-0035: CEDET global-ede-mode file loading vulnerability (rhbz#773024)
+- Check for _NET_WM_STATE_HIDDEN (rhbz#711739)
+
 * Thu Jun 30 2011 Ville Skyttä <ville.skytta@iki.fi> - 1:23.3-7
 - Use custom-set-variables for customizable variables in .emacs (#716440).
 - Move frame-title-format default from .emacs to default.el (#716443).
