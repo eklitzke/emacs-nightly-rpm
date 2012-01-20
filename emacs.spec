@@ -2,13 +2,12 @@
 Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
-Version: 24.0.92
-Release: 1%{?dist}
+Version: 23.3
+Release: 8%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
-#Source0: ftp://ftp.gnu.org/gnu/emacs/emacs-%{version}.tar.bz2
-Source0: http://alpha.gnu.org/gnu/emacs/pretest/emacs-%{version}.tar.gz
+Source0: ftp://ftp.gnu.org/gnu/emacs/emacs-%{version}.tar.bz2
 Source1: emacs.desktop
 Source2: emacsclient.desktop
 Source3: dotemacs.el
@@ -27,15 +26,23 @@ Source20: emacs-terminal.sh
 Patch0: glibc-open-macro.patch
 Patch1: rpm-spec-mode.patch
 Patch3: rpm-spec-mode-utc.patch
+# Upstream implemented the change in revno. 101105
+Patch4: emacs-23.1-xdg.patch
+# Fix rhbz#595546
+# Upstream: http://emacsbugs.donarmstrong.com/cgi/bugreport.cgi?bug=6158
+Patch6: emacs-23.2-hideshow-comment.patch
+# rhbz#711739
+# http://bzr.savannah.gnu.org/lh/emacs/trunk/revision/106247
+Patch7: emacs-wm-state-hidden.patch
 # http://lists.gnu.org/archive/html/emacs-devel/2012-01/msg00387.html
 Patch8: emacs-ede-cve-2012-0035.patch
 
 BuildRequires: atk-devel, cairo-devel, freetype-devel, fontconfig-devel, dbus-devel, giflib-devel, glibc-devel, gtk2-devel, libpng-devel
 BuildRequires: libjpeg-devel, libtiff-devel, libX11-devel, libXau-devel, libXdmcp-devel, libXrender-devel, libXt-devel
-BuildRequires: libXpm-devel, ncurses-devel, xorg-x11-proto-devel, zlib-devel, gnutls-devel
-BuildRequires: librsvg2-devel, m17n-lib-devel, libotf-devel, ImageMagick-devel, libselinux-devel
+BuildRequires: libXpm-devel, ncurses-devel, xorg-x11-proto-devel, zlib-devel
+BuildRequires: librsvg2-devel, m17n-lib-devel, libotf-devel
 BuildRequires: autoconf, automake, bzip2, cairo, texinfo, gzip
-BuildRequires: GConf2-devel, alsa-lib-devel, libxml2-devel
+BuildRequires: GConf2-devel, alsa-lib-devel
 # Desktop integration
 BuildRequires: desktop-file-utils
 # Buildrequire both python2 and python3 since below we turn off the
@@ -147,6 +154,9 @@ packages that add functionality to Emacs.
 %setup -q
 
 %patch0 -p1 -b .glibc-open-macro
+%patch4 -p1 -b .xdg
+%patch6 -p0 -b .hideshow-comment
+%patch7 -p1 -b .wm-state-hidden
 %patch8 -p1 -b .ede-cve-2012-0035
 
 # Install site-lisp files
@@ -171,7 +181,7 @@ rm -f lisp/play/tetris.el lisp/play/tetris.elc
 rm -f etc/sex.6 etc/condom.1 etc/celibacy.1 etc/COOKIES etc/future-bug etc/JOKES
 %endif
 
-%define info_files ada-mode auth autotype calc ccmode cl dbus dired-x ebrowse ede ediff edt eieio efaq eintr elisp emacs emacs-mime epa erc ert eshell eudc flymake forms gnus idlwave info mairix-el message mh-e newsticker nxml-mode org pcl-cvs pgg rcirc reftex remember sasl sc semantic ses sieve smtpmail speedbar tramp url vip viper widget woman
+%define info_files ada-mode auth autotype calc ccmode cl dbus dired-x ebrowse ede ediff edt eieio efaq eintr elisp emacs emacs-mime epa erc eshell eudc flymake forms gnus idlwave info mairix-el message mh-e newsticker nxml-mode org pcl-cvs pgg rcirc reftex remember sasl sc semantic ses sieve smtpmail speedbar tramp url vip viper widget woman
 
 if test "$(perl -e 'while (<>) { if (/^INFO_FILES/) { s/.*=//; while (s/\\$//) { s/\\//; $_ .= <>; }; s/\s+/ /g; s/^ //; s/ $//; print; exit; } }' Makefile.in)" != "%info_files"; then
   echo Please update info_files >&2
@@ -195,9 +205,7 @@ mkdir build-gtk && cd build-gtk
 ln -s ../configure .
 
 %configure --with-dbus --with-gif --with-jpeg --with-png --with-rsvg \
-           --with-tiff --with-xft --with-xpm --with-x-toolkit=gtk \
-	   --with-wide-int
-
+           --with-tiff --with-xft --with-xpm --with-x-toolkit=gtk
 make bootstrap
 %{setarch} make %{?_smp_mflags}
 cd ..
@@ -264,8 +272,8 @@ echo "(setq source-directory \"%{_datadir}/emacs/%{version}/\")" \
  >> %{buildroot}%{site_lisp}/site-start.el
 
 mv %{buildroot}%{_bindir}/{etags,etags.emacs}
-mv %{buildroot}%{_mandir}/man1/{ctags.1.gz,gctags.1.gz}
-mv %{buildroot}%{_mandir}/man1/{etags.1.gz,etags.emacs.1.gz}
+mv %{buildroot}%{_mandir}/man1/{ctags.1,gctags.1}
+mv %{buildroot}%{_mandir}/man1/{etags.1,etags.emacs.1}
 mv %{buildroot}%{_bindir}/{ctags,gctags}
 
 # Install site-lisp files
@@ -394,6 +402,7 @@ update-desktop-database &> /dev/null || :
 %config(noreplace) %{_sysconfdir}/skel/.emacs
 %config(noreplace) %{_sysconfdir}/rpm/macros.emacs
 %doc etc/NEWS BUGS README etc/COPYING
+%{_bindir}/b2m
 %{_bindir}/ebrowse
 %{_bindir}/emacsclient
 %{_bindir}/etags.emacs
@@ -425,9 +434,6 @@ update-desktop-database &> /dev/null || :
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
-* Thu Jan 19 2012 Karel Klíč <kklic@redhat.com> - 1:24.0.92-1
-- Upstream pre-release
-
 * Thu Jan 12 2012 Karel Klíč <kklic@redhat.com> - 1:23.3-8
 - Added patch to handle CVE-2012-0035: CEDET global-ede-mode file loading vulnerability (rhbz#773024)
 - Check for _NET_WM_STATE_HIDDEN (rhbz#711739)
