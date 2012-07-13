@@ -3,7 +3,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 24.1
-Release: 2%{?dist}
+Release: 3%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -31,7 +31,7 @@ Patch7: emacs-spellchecker.patch
 # rhbz#830162
 Patch8: emacs-locate-library.patch
 
-BuildRequires: atk-devel, cairo-devel, freetype-devel, fontconfig-devel, dbus-devel, giflib-devel, glibc-devel, gtk3-devel, libpng-devel
+BuildRequires: atk-devel, cairo-devel, freetype-devel, fontconfig-devel, dbus-devel, giflib-devel, glibc-devel, gtk2-devel, libpng-devel
 BuildRequires: libjpeg-devel, libtiff-devel, libX11-devel, libXau-devel, libXdmcp-devel, libXrender-devel, libXt-devel
 BuildRequires: libXpm-devel, ncurses-devel, xorg-x11-proto-devel, zlib-devel, gnutls-devel
 BuildRequires: librsvg2-devel, m17n-lib-devel, libotf-devel, ImageMagick-devel, libselinux-devel
@@ -208,7 +208,7 @@ mkdir build-gtk && cd build-gtk
 ln -s ../configure .
 
 %configure --with-dbus --with-gif --with-jpeg --with-png --with-rsvg \
-           --with-tiff --with-xft --with-xpm --with-x-toolkit=gtk3 --with-gpm=no \
+           --with-tiff --with-xft --with-xpm --with-x-toolkit=gtk --with-gpm=no \
 	   --with-wide-int
 make bootstrap
 %{setarch} make %{?_smp_mflags}
@@ -436,6 +436,9 @@ update-desktop-database &> /dev/null || :
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
+* Fri Jul 13 2012 Karel Klíč <kklic@redhat.com> - 1:24.1-3
+- Revert the switch from GTK 3 to GTK 2 for this release
+
 * Wed Jul 11 2012 Karel Klíč <kklic@redhat.com> - 1:24.1-2
 - Fix org-mode to work without emacs-el installed.
   rhbz#830162
