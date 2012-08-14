@@ -3,7 +3,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 23.3
-Release: 9%{?dist}
+Release: 10%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -36,6 +36,9 @@ Patch6: emacs-23.2-hideshow-comment.patch
 Patch7: emacs-wm-state-hidden.patch
 # http://lists.gnu.org/archive/html/emacs-devel/2012-01/msg00387.html
 Patch8: emacs-ede-cve-2012-0035.patch
+# CVE-2012-3479 emacs: Evaluation of 'eval' forms in file-local
+# variable sections, when 'enable-local-variables' set to ':safe'
+Patch9: emacs-cve-2012-3479.patch
 
 BuildRequires: atk-devel, cairo-devel, freetype-devel, fontconfig-devel, dbus-devel, giflib-devel, glibc-devel, gtk2-devel, libpng-devel
 BuildRequires: libjpeg-devel, libtiff-devel, libX11-devel, libXau-devel, libXdmcp-devel, libXrender-devel, libXt-devel
@@ -158,6 +161,7 @@ packages that add functionality to Emacs.
 %patch6 -p0 -b .hideshow-comment
 %patch7 -p1 -b .wm-state-hidden
 %patch8 -p1 -b .ede-cve-2012-0035
+%patch9 -p1 -b .cve-2012-3479
 
 # Install site-lisp files
 cp %SOURCE7 %SOURCE9 %SOURCE10 site-lisp
@@ -434,8 +438,13 @@ update-desktop-database &> /dev/null || :
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
+* Tue Aug 14 2012 Karel Klíč <kklic@redhat.com> - 1:23.3-10
+- CVE-2012-3479 emacs: Evaluation of 'eval' forms in file-local
+  variable sections, when 'enable-local-variables' set to ':safe'
+
 * Thu Jan 12 2012 Karel Klíč <kklic@redhat.com> - 1:23.3-9
-- Added patch to handle CVE-2012-0035: CEDET global-ede-mode file loading vulnerability (rhbz#773024)
+- Added patch to handle CVE-2012-0035: CEDET global-ede-mode
+  file loading vulnerability (rhbz#773024)
 
 * Wed Nov 23 2011 Karel Klíč <kklic@redhat.com> - 1:23.3-8
 - Check for _NET_WM_STATE_HIDDEN (rhbz#711739)
