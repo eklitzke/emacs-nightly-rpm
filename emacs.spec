@@ -3,7 +3,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 24.1
-Release: 5%{?dist}
+Release: 6%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -439,6 +439,9 @@ update-desktop-database &> /dev/null || :
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
+* Mon Oct 22 2012 Karel Klíč <kklic@redhat.com> - 1:24.1-6
+- Rebuild
+
 * Mon Oct 22 2012 Karel Klíč <kklic@redhat.com> - 1:24.1-5
 - Change xorg-x11-fonts-misc dependency to dejavu-sans-mono-fonts, rhbz#732422
 
