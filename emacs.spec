@@ -3,7 +3,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 24.1
-Release: 4%{?dist}
+Release: 5%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -49,7 +49,7 @@ BuildRequires: util-linux
 %endif
 Requires: desktop-file-utils
 # Emacs doesn't run without these fonts, rhbz#732422
-Requires: xorg-x11-fonts-misc
+Requires: dejavu-sans-mono-fonts
 Requires(preun): %{_sbindir}/alternatives
 Requires(posttrans): %{_sbindir}/alternatives
 Requires: emacs-common = %{epoch}:%{version}-%{release}
@@ -439,6 +439,9 @@ update-desktop-database &> /dev/null || :
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
+* Mon Oct 22 2012 Karel Klíč <kklic@redhat.com> - 1:24.1-5
+- Change xorg-x11-fonts-misc dependency to dejavu-sans-mono-fonts, rhbz#732422
+
 * Mon Aug 13 2012 Karel Klíč <kklic@redhat.com> - 1:24.1-4
 - Fix CVE-2012-3479: Evaluation of 'eval' forms in file-local variable
   sections, when 'enable-local-variables' set to ':safe'
