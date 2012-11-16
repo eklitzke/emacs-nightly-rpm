@@ -3,7 +3,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 23.3
-Release: 10%{?dist}
+Release: 11%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -39,6 +39,8 @@ Patch8: emacs-ede-cve-2012-0035.patch
 # CVE-2012-3479 emacs: Evaluation of 'eval' forms in file-local
 # variable sections, when 'enable-local-variables' set to ':safe'
 Patch9: emacs-cve-2012-3479.patch
+# Fix for Emacs bug #11580.
+Patch10: emacs-bz11580-eudc-bbdb.patch
 
 BuildRequires: atk-devel, cairo-devel, freetype-devel, fontconfig-devel, dbus-devel, giflib-devel, glibc-devel, gtk2-devel, libpng-devel
 BuildRequires: libjpeg-devel, libtiff-devel, libX11-devel, libXau-devel, libXdmcp-devel, libXrender-devel, libXt-devel
@@ -162,6 +164,7 @@ packages that add functionality to Emacs.
 %patch7 -p1 -b .wm-state-hidden
 %patch8 -p1 -b .ede-cve-2012-0035
 %patch9 -p1 -b .cve-2012-3479
+%patch10 -p1 -b .emacs-bz11580-eudc-bbdb
 
 # Install site-lisp files
 cp %SOURCE7 %SOURCE9 %SOURCE10 site-lisp
@@ -438,6 +441,10 @@ update-desktop-database &> /dev/null || :
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
+* Tue Nov 06 2012 Sergio Durigan Junior <sergiodj@riseup.net> - 1:23.3-11
+- Fix for Emacs bug #11580, 'Fix querying BBDB for entries without a last
+  name'.
+
 * Tue Aug 14 2012 Karel Klíč <kklic@redhat.com> - 1:23.3-10
 - CVE-2012-3479 emacs: Evaluation of 'eval' forms in file-local
   variable sections, when 'enable-local-variables' set to ':safe'
