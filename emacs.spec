@@ -31,12 +31,16 @@ BuildRequires: libXpm-devel ncurses-devel xorg-x11-proto-devel zlib-devel gnutls
 BuildRequires: librsvg2-devel m17n-lib-devel libotf-devel ImageMagick-devel libselinux-devel
 BuildRequires: GConf2-devel alsa-lib-devel gpm-devel liblockfile-devel libxml2-devel
 BuildRequires: bzip2 cairo texinfo gzip desktop-file-utils
-%if 0%{?el6}
+%if 0%{?rhel6} == 6
 BuildRequires: gtk2-devel
 %else
+%if 0%{?rhel7} == 7
+BuildRequires: gtk3-devel python2-devel 
 # Buildrequire both python2 and python3 on systems containing both,
 # since below we turn off the brp-python-bytecompile script
+%else
 BuildRequires: gtk3-devel python2-devel python3-devel
+%endif
 %endif
 %ifarch %{ix86}
 BuildRequires: util-linux
