@@ -3,7 +3,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 24.2
-Release: 12%{?dist}
+Release: 13%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -31,10 +31,10 @@ BuildRequires: libXpm-devel ncurses-devel xorg-x11-proto-devel zlib-devel gnutls
 BuildRequires: librsvg2-devel m17n-lib-devel libotf-devel ImageMagick-devel libselinux-devel
 BuildRequires: GConf2-devel alsa-lib-devel gpm-devel liblockfile-devel libxml2-devel
 BuildRequires: bzip2 cairo texinfo gzip desktop-file-utils
-%if 0%{?rhel6} == 6
+%if 0%{?rhel} == 6
 BuildRequires: gtk2-devel
 %else
-%if 0%{?rhel7} == 7
+%if 0%{?rhel} == 7
 BuildRequires: gtk3-devel python2-devel 
 # Buildrequire both python2 and python3 on systems containing both,
 # since below we turn off the brp-python-bytecompile script
@@ -436,6 +436,9 @@ update-desktop-database &> /dev/null || :
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
+* Mon Mar 18 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-13
+- solved problem with distribution flag in case of rhel
+
 * Mon Mar 18 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-12
 - solved problem with distribution flag in case of rhel
 
