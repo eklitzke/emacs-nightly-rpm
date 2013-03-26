@@ -3,7 +3,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 24.2
-Release: 13%{?dist}
+Release: 14%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -53,7 +53,7 @@ Requires(posttrans): %{_sbindir}/alternatives
 Requires: emacs-common = %{epoch}:%{version}-%{release}
 Provides: emacs(bin) = %{epoch}:%{version}-%{release}
 
-%if 0%{!?el6:1}
+%if 0%{!?rhel} == 6
 # Turn off the brp-python-bytecompile script since this script doesn't
 # properly dtect the correct python runtime for the files emacs2.py and
 # emacs3.py
@@ -206,7 +206,7 @@ export CFLAGS="-DMAIL_USE_LOCKF $RPM_OPT_FLAGS"
 mkdir build-gtk && cd build-gtk
 ln -s ../configure .
 
-%if 0%{?el6}
+%if 0%{?rhel} == 6
 %define toolkit gtk
 %else
 %define toolkit gtk3
@@ -314,7 +314,7 @@ desktop-file-install --dir=%{buildroot}%{_datadir}/applications \
                      %SOURCE6
 
 # Byte compile emacs*.py with correct python interpreters
-%if 0%{!?el6:1}
+%if 0%{!?rhel} == 6
 %py_byte_compile %{__python} %{buildroot}%{_datadir}/%{name}/%{version}/etc/emacs.py
 %py_byte_compile %{__python} %{buildroot}%{_datadir}/%{name}/%{version}/etc/emacs2.py
 %py_byte_compile %{__python3} %{buildroot}%{_datadir}/%{name}/%{version}/etc/emacs3.py
@@ -436,6 +436,9 @@ update-desktop-database &> /dev/null || :
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
+* Tue Mar 26 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-14
+- fixing distribution flags to rhel instead of el6:1
+
 * Mon Mar 18 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-13
 - solved problem with distribution flag in case of rhel
 
