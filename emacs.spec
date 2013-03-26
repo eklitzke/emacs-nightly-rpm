@@ -317,8 +317,6 @@ desktop-file-install --dir=%{buildroot}%{_datadir}/applications \
 # Byte compile emacs*.py with correct python interpreters
 %if 0%{?rhel:1}
 rm -f %{buildroot}%{_datadir}/%{name}/%{version}/etc/emacs3.py
-%py_byte_compile %{__python} %{buildroot}%{_datadir}/%{name}/%{version}/etc/emacs.py
-%py_byte_compile %{__python} %{buildroot}%{_datadir}/%{name}/%{version}/etc/emacs2.py
 %else
 %py_byte_compile %{__python} %{buildroot}%{_datadir}/%{name}/%{version}/etc/emacs.py
 %py_byte_compile %{__python} %{buildroot}%{_datadir}/%{name}/%{version}/etc/emacs2.py
