@@ -53,7 +53,7 @@ Requires(posttrans): %{_sbindir}/alternatives
 Requires: emacs-common = %{epoch}:%{version}-%{release}
 Provides: emacs(bin) = %{epoch}:%{version}-%{release}
 
-%if 0%{!?rhel} == 6
+%if 0%{!?rhel:1}
 # Turn off the brp-python-bytecompile script since this script doesn't
 # properly dtect the correct python runtime for the files emacs2.py and
 # emacs3.py
@@ -154,6 +154,7 @@ This package provides some directories which are required by other
 packages that add functionality to Emacs.
 
 %prep
+echo "the value of macro is: --%{el6}-- and --%{rhel}--"
 %setup -q
 
 %patch7 -p1 -b .spellchecker
@@ -314,7 +315,11 @@ desktop-file-install --dir=%{buildroot}%{_datadir}/applications \
                      %SOURCE6
 
 # Byte compile emacs*.py with correct python interpreters
-%if 0%{!?rhel} == 6
+%if 0%{?rhel:1}
+rm -f %{buildroot}%{_datadir}/%{name}/%{version}/etc/emacs3.py
+%py_byte_compile %{__python} %{buildroot}%{_datadir}/%{name}/%{version}/etc/emacs.py
+%py_byte_compile %{__python} %{buildroot}%{_datadir}/%{name}/%{version}/etc/emacs2.py
+%else
 %py_byte_compile %{__python} %{buildroot}%{_datadir}/%{name}/%{version}/etc/emacs.py
 %py_byte_compile %{__python} %{buildroot}%{_datadir}/%{name}/%{version}/etc/emacs2.py
 %py_byte_compile %{__python3} %{buildroot}%{_datadir}/%{name}/%{version}/etc/emacs3.py
