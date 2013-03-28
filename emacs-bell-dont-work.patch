@@ -1,0 +1,39 @@
+diff --git a/configure.in b/configure.in
+index 2b0b2f7..68459bc 100644
+--- a/configure.in
++++ b/configure.in
+@@ -1843,6 +1843,7 @@ if test "${HAVE_X11}" = "yes"; then
+   AC_MSG_RESULT($emacs_xkb)
+   if test $emacs_xkb = yes; then
+     AC_DEFINE(HAVE_XKBGETKEYBOARD, 1, [Define to 1 if you have the XkbGetKeyboard function.])
++    AC_DEFINE(HAVE_XKB, 1, [Define to 1 if you have the Xkb extension.])
+   fi
+ 
+   AC_CHECK_FUNCS(XrmSetDatabase XScreenResourceString \
+diff --git a/src/xterm.c b/src/xterm.c
+index 9ce1668..67ad919 100644
+--- a/src/xterm.c
++++ b/src/xterm.c
+@@ -139,6 +139,10 @@ extern void _XEditResCheckMessages (Widget, XtPointer, XEvent *, Boolean *);
+ #endif
+ #endif
+ 
++#ifdef HAVE_XKB
++#include <X11/XKBlib.h>
++#endif
++
+ /* Default to using XIM if available.  */
+ #ifdef USE_XIM
+ int use_xim = 1;
+@@ -3238,7 +3242,11 @@ XTring_bell (struct frame *f)
+ #endif
+ 	{
+ 	  BLOCK_INPUT;
++#ifdef HAVE_XKB
++      XkbBell (FRAME_X_DISPLAY (f), None, 0, None);
++#else
+ 	  XBell (FRAME_X_DISPLAY (f), 0);
++#endif
+ 	  XFlush (FRAME_X_DISPLAY (f));
+ 	  UNBLOCK_INPUT;
+ 	}

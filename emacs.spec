@@ -24,6 +24,8 @@ Patch8: emacs-locate-library.patch
 Patch9: emacs-bz11580-eudc-bbdb.patch
 # Fix for emacs bug #922519
 Patch10: emacs-style-change-cb.patch
+# Fix for emacs bug #922519
+Patch11: emacs-bell-dont-work.patch
 # Fix for emacs bug #13460.
 Patch100: emacs-24.2-hunspell.patch
 
@@ -163,6 +165,7 @@ packages that add functionality to Emacs.
 %patch9 -p1 -b .emacs-bz11580-eudc-bbdb
 
 %patch10 -p1 -b .style-change-cb.patch
+%patch11 -p1 -b .bell-dont-work.patch
 
 %patch100 -p1 -b .hunspell
 
@@ -444,6 +447,7 @@ update-desktop-database &> /dev/null || :
 %changelog
 * Thu Mar 28 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-15
 - Fix for emacs bug 112144, style_changed_cb (#922519) 
+- Fix for emacs bug 112131, bell does not work (#526719) 
 
 * Tue Mar 26 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-14
 - fixing distribution flags to rhel instead of el6:1
