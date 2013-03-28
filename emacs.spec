@@ -3,7 +3,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 24.2
-Release: 14%{?dist}
+Release: 15%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -22,6 +22,8 @@ Patch7: emacs-spellchecker.patch
 Patch8: emacs-locate-library.patch
 # Fix for Emacs bug #111500.
 Patch9: emacs-bz11580-eudc-bbdb.patch
+# Fix for emacs bug #922519
+Patch10: emacs-style-change-cb.patch
 # Fix for emacs bug #13460.
 Patch100: emacs-24.2-hunspell.patch
 
@@ -159,6 +161,8 @@ packages that add functionality to Emacs.
 %patch7 -p1 -b .spellchecker
 %patch8 -p1 -b .locate-library
 %patch9 -p1 -b .emacs-bz11580-eudc-bbdb
+
+%patch10 -p1 -b .style-change-cb.patch
 
 %patch100 -p1 -b .hunspell
 
@@ -438,6 +442,9 @@ update-desktop-database &> /dev/null || :
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
+* Thu Mar 28 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-15
+- Fix for emacs bug 112144, style_changed_cb (#922519) 
+
 * Tue Mar 26 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-14
 - fixing distribution flags to rhel instead of el6:1
 
@@ -628,7 +635,7 @@ update-desktop-database &> /dev/null || :
 - Added filesystem subpackage (rhbz#661866)
 - Added emacsclient desktop file (rhbz#665362)
 
-* Thu Jan  7 2011 Karel Klic <kklic@redhat.com> - 1:23.2-16
+* Fri Jan  7 2011 Karel Klic <kklic@redhat.com> - 1:23.2-16
 - Removed dependency on both hunspell and aspell. Emacs does not
   _require_ spell checker, e.g. if user wants to uninstall one, there
   is no reason why Emacs should also be uninstalled. Emacs can run one
@@ -638,7 +645,7 @@ update-desktop-database &> /dev/null || :
 - Cleaned spec file header
 - Removed gcc-4.5.0 specific CFLAGS
 
-* Thu Jan  7 2011 Karel Klic <kklic@redhat.com> - 1:23.2-15
+* Fri Jan  7 2011 Karel Klic <kklic@redhat.com> - 1:23.2-15
 - The emacs-terminal package now requires emacs package
 
 * Thu Jan  6 2011 Karel Klic <kklic@redhat.com> - 1:23.2-14
@@ -938,7 +945,7 @@ update-desktop-database &> /dev/null || :
 - fix pkgconfig path (from pkg-config to pkgconfig (Jonathan Underwood)
 - use macro instead of variable style for buildroot.
 
-* Mon Aug 28 2007 Chip Coldwell <coldwell@redhat.com> - 22.1-3
+* Tue Aug 28 2007 Chip Coldwell <coldwell@redhat.com> - 22.1-3
 - change group from Development to Utility
 
 * Mon Aug 13 2007 Chip Coldwell <coldwell@redhat.com> - 22.1-2
@@ -946,7 +953,7 @@ update-desktop-database &> /dev/null || :
 - glibc-open-macro.patch to deal with glibc turning "open" into a macro.
 - leave emacs info pages in default section (Resolves: bz199008)
 
-* Fri Jun  6 2007 Chip Coldwell <coldwell@redhat.com> - 22.1-1
+* Wed Jun  6 2007 Chip Coldwell <coldwell@redhat.com> - 22.1-1
 - move alternatives install to posttrans scriptlet (Resolves: bz239745)
 - new release tarball from FSF (Resolves: bz245303)
 - new php-mode 1.2.0
@@ -1278,7 +1285,7 @@ update-desktop-database &> /dev/null || :
   and remove redundant next-line-add-newlines setting
 - update info_file list (Reuben Thomas,114729)
 
-* Wed Mar 16 2004 Mike A. Harris <mharris@redhat.com> 21.3-11
+* Tue Mar 16 2004 Mike A. Harris <mharris@redhat.com> 21.3-11
 - Removed bogus Requires: XFree86-libs that was added in 21.3-8, as rpm
   find-requires will automatically pick up the dependancies on any runtime
   libraries, and such hard coded requires is not X11 implementation
@@ -1599,7 +1606,7 @@ update-desktop-database &> /dev/null || :
 * Sat Jan 27 2001 Jakub Jelinek <jakub@redhat.com>
 - Preprocess Makefiles as if they were assembly, not C source.
 
-* Thu Jan 24 2001 Yukihiro Nakai <ynakai@redhat.com>
+* Wed Jan 24 2001 Yukihiro Nakai <ynakai@redhat.com>
 - Fix the fontset problem when creating a new frame.
 
 * Thu Jan 18 2001 Trond Eivind Glomsrød <teg@redhat.com>
