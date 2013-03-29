@@ -3,7 +3,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 24.2
-Release: 6%{?dist}
+Release: 15%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -12,22 +12,20 @@ Source1: emacs.desktop
 Source2: emacsclient.desktop
 Source3: dotemacs.el
 Source4: site-start.el
-# rpm-spec-mode from XEmacs
-Source10: https://bitbucket.org/xemacs/prog-modes/raw/eacc4cb30d0c/rpm-spec-mode.el
-Source11: rpm-spec-mode-init.el
-Source18: default.el
+Source5: default.el
 # Emacs Terminal Mode, #551949, #617355
-Source19: emacs-terminal.desktop
-Source20: emacs-terminal.sh
-Patch1: rpm-spec-mode.patch
-Patch2: rpm-spec-mode-utc.patch
-Patch3: rpm-spec-mode-changelog.patch
+Source6: emacs-terminal.desktop
+Source7: emacs-terminal.sh
 # rhbz#713600
 Patch7: emacs-spellchecker.patch
 # rhbz#830162, fixed in org-mode upstream
 Patch8: emacs-locate-library.patch
 # Fix for Emacs bug #111500.
 Patch9: emacs-bz11580-eudc-bbdb.patch
+# Fix for emacs bug #922519
+Patch10: emacs-style-change-cb.patch
+# Fix for emacs bug #922519
+Patch11: emacs-bell-dont-work.patch
 # Fix for emacs bug #13460.
 Patch100: emacs-24.2-hunspell.patch
 
@@ -37,12 +35,16 @@ BuildRequires: libXpm-devel ncurses-devel xorg-x11-proto-devel zlib-devel gnutls
 BuildRequires: librsvg2-devel m17n-lib-devel libotf-devel ImageMagick-devel libselinux-devel
 BuildRequires: GConf2-devel alsa-lib-devel gpm-devel liblockfile-devel libxml2-devel
 BuildRequires: bzip2 cairo texinfo gzip desktop-file-utils
-%if 0%{?el6}
+%if 0%{?rhel} == 6
 BuildRequires: gtk2-devel
 %else
+%if 0%{?rhel} == 7
+BuildRequires: gtk3-devel python2-devel 
 # Buildrequire both python2 and python3 on systems containing both,
 # since below we turn off the brp-python-bytecompile script
+%else
 BuildRequires: gtk3-devel python2-devel python3-devel
+%endif
 %endif
 %ifarch %{ix86}
 BuildRequires: util-linux
@@ -55,7 +57,7 @@ Requires(posttrans): %{_sbindir}/alternatives
 Requires: emacs-common = %{epoch}:%{version}-%{release}
 Provides: emacs(bin) = %{epoch}:%{version}-%{release}
 
-%if 0%{!?el6:1}
+%if 0%{!?rhel:1}
 # Turn off the brp-python-bytecompile script since this script doesn't
 # properly dtect the correct python runtime for the files emacs2.py and
 # emacs3.py
@@ -102,7 +104,9 @@ on a terminal.
 
 %package common
 Summary: Emacs common files
-License: GPLv3+ and GFDL
+# The entire source code is GPLv3+ except lib-src/etags.c which is
+# also BSD.  Manual (info) is GFDL.
+License: GPLv3+ and GFDL and BSD
 Group: Applications/Editors
 Requires(preun): /sbin/install-info
 Requires(preun): %{_sbindir}/alternatives
@@ -160,13 +164,8 @@ packages that add functionality to Emacs.
 %patch8 -p1 -b .locate-library
 %patch9 -p1 -b .emacs-bz11580-eudc-bbdb
 
-# Install site-lisp files
-cp %SOURCE10 site-lisp
-pushd site-lisp
-%patch1 -p0
-%patch2 -p0
-%patch3 -p0
-popd
+%patch10 -p1 -b .style-change-cb.patch
+%patch11 -p1 -b .bell-dont-work.patch
 
 %patch100 -p1 -b .hunspell
 
@@ -214,7 +213,7 @@ export CFLAGS="-DMAIL_USE_LOCKF $RPM_OPT_FLAGS"
 mkdir build-gtk && cd build-gtk
 ln -s ../configure .
 
-%if 0%{?el6}
+%if 0%{?rhel} == 6
 %define toolkit gtk
 %else
 %define toolkit gtk3
@@ -233,9 +232,6 @@ ln -s ../configure .
 %configure --with-x=no
 %{setarch} make %{?_smp_mflags}
 cd ..
-
-# Make sure patched lisp files get byte-compiled
-build-gtk/src/emacs %{bytecompargs} site-lisp/*.el
 
 # Remove versioned file so that we end up with .1 suffix and only one DOC file
 rm build-{gtk,nox}/src/emacs-%{version}.*
@@ -281,7 +277,7 @@ chmod 755 %{buildroot}%{emacs_libexecdir}/movemail
 
 mkdir -p %{buildroot}%{site_lisp}
 install -p -m 0644 %SOURCE4 %{buildroot}%{site_lisp}/site-start.el
-install -p -m 0644 %SOURCE18 %{buildroot}%{site_lisp}
+install -p -m 0644 %SOURCE5 %{buildroot}%{site_lisp}
 
 # This solves bz#474958, "update-directory-autoloads" now finally
 # works the path is different each version, so we'll generate it here
@@ -293,11 +289,7 @@ mv %{buildroot}%{_mandir}/man1/{ctags.1.gz,gctags.1.gz}
 mv %{buildroot}%{_mandir}/man1/{etags.1.gz,etags.emacs.1.gz}
 mv %{buildroot}%{_bindir}/{ctags,gctags}
 
-# Install site-lisp files
-install -p -m 0644 site-lisp/*.el{,c} %{buildroot}%{site_lisp}
-
 mkdir -p %{buildroot}%{site_lisp}/site-start.d
-install -p -m 0644 %SOURCE11 %{buildroot}%{site_lisp}/site-start.d
 
 # Default initialization file
 mkdir -p %{buildroot}%{_sysconfdir}/skel
@@ -315,7 +307,7 @@ mkdir -p %{buildroot}%{_sysconfdir}/rpm
 install -p -m 0644 macros.emacs %{buildroot}%{_sysconfdir}/rpm/
 
 # Installing emacs-terminal binary
-install -p -m 755 %SOURCE20 %{buildroot}%{_bindir}/emacs-terminal
+install -p -m 755 %SOURCE7 %{buildroot}%{_bindir}/emacs-terminal
 
 # After everything is installed, remove info dir
 rm -f %{buildroot}%{_infodir}/dir
@@ -326,10 +318,12 @@ mkdir -p %{buildroot}%{_datadir}/applications
 desktop-file-install --dir=%{buildroot}%{_datadir}/applications \
                      %SOURCE1
 desktop-file-install --dir=%{buildroot}%{_datadir}/applications \
-                     %SOURCE19
+                     %SOURCE6
 
 # Byte compile emacs*.py with correct python interpreters
-%if 0%{!?el6:1}
+%if 0%{?rhel:1}
+rm -f %{buildroot}%{_datadir}/%{name}/%{version}/etc/emacs3.py
+%else
 %py_byte_compile %{__python} %{buildroot}%{_datadir}/%{name}/%{version}/etc/emacs.py
 %py_byte_compile %{__python} %{buildroot}%{_datadir}/%{name}/%{version}/etc/emacs2.py
 %py_byte_compile %{__python3} %{buildroot}%{_datadir}/%{name}/%{version}/etc/emacs3.py
@@ -419,7 +413,7 @@ update-desktop-database &> /dev/null || :
 
 %files -f common-filelist common
 %config(noreplace) %{_sysconfdir}/skel/.emacs
-%config(noreplace) %{_sysconfdir}/rpm/macros.emacs
+%{_sysconfdir}/rpm/macros.emacs
 %doc doc/NEWS BUGS README doc/COPYING
 %{_bindir}/ebrowse
 %{_bindir}/emacsclient
@@ -451,15 +445,45 @@ update-desktop-database &> /dev/null || :
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
-* Mon Jan 21 2013 Jochen Schmitt <Jochen herr-schmitt de> - 1:24.2-6
+* Thu Mar 28 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-15
+- Fix for emacs bug 112144, style_changed_cb (#922519) 
+- Fix for emacs bug 112131, bell does not work (#526719) 
+
+* Tue Mar 26 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-14
+- fixing distribution flags to rhel instead of el6:1
+
+* Mon Mar 18 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-13
+- solved problem with distribution flag in case of rhel
+
+* Mon Mar 18 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-12
+- solved problem with distribution flag in case of rhel
+
+* Fri Mar 08 2013 Ralf Corsépius <corsepiu@fedoraproject.org> - 1:24.2-11
+- Remove %%config from %%{_sysconfdir}/rpm/macros.*
+  (https://fedorahosted.org/fpc/ticket/259).
+- Fix broken spec-file changelog entry.
+
+* Wed Mar  6 2013 Tomáš Mráz <tmraz@redhat.com> - 1:24.2-10
+- Rebuild with new gnutls
+
+* Mon Jan 21 2013 Jochen Schmitt <Jochen herr-schmitt de> - 1:24.2-9
 - Fix for emacs bug #13460, ispell-change dictionary hunspell issue (#903151)
 
-* Tue Nov 06 2012 Sergio Durigan Junior <sergiodj@riseup.net> - 1:24.2-5
+* Fri Jan 18 2013 Adam Tkac <atkac redhat com> - 1:24.2-8
+- rebuild due to "jpeg8-ABI" feature drop
+
+* Tue Nov 06 2012 Sergio Durigan Junior <sergiodj@riseup.net> - 1:24.2-7
 - Fix for Emacs bug #11580, 'Fix querying BBDB for entries without a last
   name'.
 
-* Mon Oct 22 2012 Karel Klíč <kklic@redhat.com> - 1:24.2-4
+* Mon Oct 22 2012 Karel Klíč <kklic@redhat.com> - 1:24.2-6
 - Change xorg-x11-fonts-misc dependency to dejavu-sans-mono-fonts, rhbz#732422
+
+* Thu Sep 20 2012 Karel Klíč <kklic@redhat.com> - 1:24.2-5
+- Add BSD to emacs-common licenses because of etags.
+
+* Fri Sep 14 2012 Karel Klíč <kklic@redhat.com> - 1:24.2-4
+- Moved RPM spec mode to a separate package (rhbz#857865)
 
 * Fri Sep 14 2012 Karel Klíč <kklic@redhat.com> - 1:24.2-3
 - Removed patch glibc-open-macro, which seems to be no longer necessary
@@ -615,7 +639,7 @@ update-desktop-database &> /dev/null || :
 - Added filesystem subpackage (rhbz#661866)
 - Added emacsclient desktop file (rhbz#665362)
 
-* Thu Jan  7 2011 Karel Klic <kklic@redhat.com> - 1:23.2-16
+* Fri Jan  7 2011 Karel Klic <kklic@redhat.com> - 1:23.2-16
 - Removed dependency on both hunspell and aspell. Emacs does not
   _require_ spell checker, e.g. if user wants to uninstall one, there
   is no reason why Emacs should also be uninstalled. Emacs can run one
@@ -625,7 +649,7 @@ update-desktop-database &> /dev/null || :
 - Cleaned spec file header
 - Removed gcc-4.5.0 specific CFLAGS
 
-* Thu Jan  7 2011 Karel Klic <kklic@redhat.com> - 1:23.2-15
+* Fri Jan  7 2011 Karel Klic <kklic@redhat.com> - 1:23.2-15
 - The emacs-terminal package now requires emacs package
 
 * Thu Jan  6 2011 Karel Klic <kklic@redhat.com> - 1:23.2-14
@@ -658,7 +682,7 @@ update-desktop-database &> /dev/null || :
 
 * Thu Jul  8 2010 Karel Klic <kklic@redhat.com> - 1:23.2-6
 - Removed Obsoletes: emacs-nxml-mode, it was obsoleted in F-11
-- Added COPYING to emacs-el, moved COPYING in emacs-common to %doc
+- Added COPYING to emacs-el, moved COPYING in emacs-common to %%doc
 
 * Thu Jun  3 2010 Karel Klic <kklic@redhat.com> - 1:23.2-5
 - Fixed handling of dual spacing fonts rhbz#599437
@@ -925,7 +949,7 @@ update-desktop-database &> /dev/null || :
 - fix pkgconfig path (from pkg-config to pkgconfig (Jonathan Underwood)
 - use macro instead of variable style for buildroot.
 
-* Mon Aug 28 2007 Chip Coldwell <coldwell@redhat.com> - 22.1-3
+* Tue Aug 28 2007 Chip Coldwell <coldwell@redhat.com> - 22.1-3
 - change group from Development to Utility
 
 * Mon Aug 13 2007 Chip Coldwell <coldwell@redhat.com> - 22.1-2
@@ -933,7 +957,7 @@ update-desktop-database &> /dev/null || :
 - glibc-open-macro.patch to deal with glibc turning "open" into a macro.
 - leave emacs info pages in default section (Resolves: bz199008)
 
-* Fri Jun  6 2007 Chip Coldwell <coldwell@redhat.com> - 22.1-1
+* Wed Jun  6 2007 Chip Coldwell <coldwell@redhat.com> - 22.1-1
 - move alternatives install to posttrans scriptlet (Resolves: bz239745)
 - new release tarball from FSF (Resolves: bz245303)
 - new php-mode 1.2.0
@@ -1265,7 +1289,7 @@ update-desktop-database &> /dev/null || :
   and remove redundant next-line-add-newlines setting
 - update info_file list (Reuben Thomas,114729)
 
-* Wed Mar 16 2004 Mike A. Harris <mharris@redhat.com> 21.3-11
+* Tue Mar 16 2004 Mike A. Harris <mharris@redhat.com> 21.3-11
 - Removed bogus Requires: XFree86-libs that was added in 21.3-8, as rpm
   find-requires will automatically pick up the dependancies on any runtime
   libraries, and such hard coded requires is not X11 implementation
@@ -1586,7 +1610,7 @@ update-desktop-database &> /dev/null || :
 * Sat Jan 27 2001 Jakub Jelinek <jakub@redhat.com>
 - Preprocess Makefiles as if they were assembly, not C source.
 
-* Thu Jan 24 2001 Yukihiro Nakai <ynakai@redhat.com>
+* Wed Jan 24 2001 Yukihiro Nakai <ynakai@redhat.com>
 - Fix the fontset problem when creating a new frame.
 
 * Thu Jan 18 2001 Trond Eivind Glomsrød <teg@redhat.com>
