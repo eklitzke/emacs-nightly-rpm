@@ -3,7 +3,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 24.2
-Release: 15%{?dist}
+Release: 16%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -26,6 +26,8 @@ Patch9: emacs-bz11580-eudc-bbdb.patch
 Patch10: emacs-style-change-cb.patch
 # Fix for emacs bug #922519
 Patch11: emacs-bell-dont-work.patch
+# Fix for emacs bug #929353
+Patch12: emacs-gtk-warning.patch
 # Fix for emacs bug #13460.
 Patch100: emacs-24.2-hunspell.patch
 
@@ -166,6 +168,7 @@ packages that add functionality to Emacs.
 
 %patch10 -p1 -b .style-change-cb.patch
 %patch11 -p1 -b .bell-dont-work.patch
+%patch12 -p1 -b .gtk-warning.patch
 
 %patch100 -p1 -b .hunspell
 
@@ -445,6 +448,9 @@ update-desktop-database &> /dev/null || :
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
+* Thu Apr 04 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-16
+- Fix #929353: emacs gives gtk-warning
+
 * Thu Mar 28 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-15
 - Fix for emacs bug 112144, style_changed_cb (#922519) 
 - Fix for emacs bug 112131, bell does not work (#526719) 
