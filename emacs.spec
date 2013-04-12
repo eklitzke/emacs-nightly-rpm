@@ -3,7 +3,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 24.2
-Release: 17%{?dist}
+Release: 18%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -16,6 +16,12 @@ Source5: default.el
 # Emacs Terminal Mode, #551949, #617355
 Source6: emacs-terminal.desktop
 Source7: emacs-terminal.sh
+# rpm-spec-mode for XEmacs
+Source10: https://bitbucket.org/xemacs/prog-modes/raw/eacc4cb30d0c/rpm-spec-mode.el
+Source11: rpm-spec-mode-init.el
+Patch1: rpm-spec-mode.patch
+Patch2: rpm-spec-mode-utc.patch
+Patch3: rpm-spec-mode-changelog.patch
 # rhbz#713600
 Patch7: emacs-spellchecker.patch
 # rhbz#830162, fixed in org-mode upstream
@@ -175,6 +181,15 @@ packages that add functionality to Emacs.
 %patch100 -p1 -b .hunspell
 %patch101 -p1 -b .hunspell.2
 
+
+#Install site-lisp files
+cp %SOURCE10 site-lisp
+pushd site-lisp
+%patch1 -p0
+%patch2 -p0
+%patch3 -p0
+popd
+
 # We prefer our emacs.desktop file
 cp %SOURCE1 etc/emacs.desktop
 
@@ -240,6 +255,10 @@ ln -s ../configure .
 %{setarch} make %{?_smp_mflags}
 cd ..
 
+# Make sure patched lisp files get byte-compiled
+build-gtk/src/emacs %{bytecompargs} site-lisp/*.el
+
+
 # Remove versioned file so that we end up with .1 suffix and only one DOC file
 rm build-{gtk,nox}/src/emacs-%{version}.*
 
@@ -296,7 +315,11 @@ mv %{buildroot}%{_mandir}/man1/{ctags.1.gz,gctags.1.gz}
 mv %{buildroot}%{_mandir}/man1/{etags.1.gz,etags.emacs.1.gz}
 mv %{buildroot}%{_bindir}/{ctags,gctags}
 
+# Install site-lisp files
+install -p -m 0644 site-lisp/*.el{,c} %{buildroot}%{site_lisp}
+
 mkdir -p %{buildroot}%{site_lisp}/site-start.d
+install -p -m 0644 %SOURCE11 %{buildroot}%{site_lisp}/site-start.d
 
 # Default initialization file
 mkdir -p %{buildroot}%{_sysconfdir}/skel
@@ -452,6 +475,9 @@ update-desktop-database &> /dev/null || :
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
+* Fri Apr 12 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-18
+- emacs rpm spec mode is no more provided (#951101)
+
 * Mon Apr 08 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-17
 - Spell checking broken by non-default dictionary (#827033)
 
