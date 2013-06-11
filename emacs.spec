@@ -189,7 +189,7 @@ pushd site-lisp
 %patch1 -p0
 %patch2 -p0
 %patch3 -p0
-%patch4 -p0
+%patch4 -p1
 popd
 
 # We prefer our emacs.desktop file
