@@ -3,7 +3,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 24.2
-Release: 18%{?dist}
+Release: 19%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -22,6 +22,7 @@ Source11: rpm-spec-mode-init.el
 Patch1: rpm-spec-mode.patch
 Patch2: rpm-spec-mode-utc.patch
 Patch3: rpm-spec-mode-changelog.patch
+Patch4: rpm-spec-mode-changelog2.patch
 # rhbz#713600
 Patch7: emacs-spellchecker.patch
 # rhbz#830162, fixed in org-mode upstream
@@ -188,6 +189,7 @@ pushd site-lisp
 %patch1 -p0
 %patch2 -p0
 %patch3 -p0
+%patch4 -p0
 popd
 
 # We prefer our emacs.desktop file
@@ -475,6 +477,9 @@ update-desktop-database &> /dev/null || :
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
+* Tue Jun 11 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-19
+- rpm-goto-add-change-log-entry is not working (#970924)
+
 * Fri Apr 12 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-18
 - emacs rpm spec mode is no more provided (#951101)
 

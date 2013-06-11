@@ -1,0 +1,21 @@
+diff --git a/rpm-spec-mode.el b/rpm-spec-mode.el
+index 63c37fa..88a7247 100644
+--- a/rpm-spec-mode.el
++++ b/rpm-spec-mode.el
+@@ -739,12 +739,16 @@ If `rpm-change-log-uses-utc' is nil, \"today\" means the local time zone."
+   (interactive "sChange log entry: ")
+   (save-excursion
+     (rpm-goto-add-change-log-header)
++      (while (looking-at "^-")
++             (forward line))
+       (insert "- " change-log-entry "\n")))
+ 
+ (defun rpm-goto-add-change-log-entry ()
+   "Goto change log and add an header for today (if needed)."
+   (interactive)
+   (rpm-goto-add-change-log-header)
++  (while (looking-at "^-")
++         (forward line))
+   (insert "- \n")
+   (end-of-line '0))
+ 
