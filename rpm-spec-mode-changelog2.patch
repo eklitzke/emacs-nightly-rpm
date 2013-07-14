@@ -7,7 +7,7 @@ index 63c37fa..88a7247 100644
    (save-excursion
      (rpm-goto-add-change-log-header)
 +      (while (looking-at "^-")
-+             (forward line))
++             (forward-line))
        (insert "- " change-log-entry "\n")))
  
  (defun rpm-goto-add-change-log-entry ()
@@ -15,7 +15,7 @@ index 63c37fa..88a7247 100644
    (interactive)
    (rpm-goto-add-change-log-header)
 +  (while (looking-at "^-")
-+         (forward line))
++         (forward-line))
    (insert "- \n")
    (end-of-line '0))
  

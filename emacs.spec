@@ -3,7 +3,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 24.2
-Release: 19%{?dist}
+Release: 20%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -477,6 +477,9 @@ update-desktop-database &> /dev/null || :
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
+* Sun Jul 14 2013 Michael Schwendt <mschwendt@fedoraproject.org> - 1:24.2-20
+- Really fix #970924
+
 * Tue Jun 11 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-19
 - rpm-goto-add-change-log-entry is not working (#970924)
 
