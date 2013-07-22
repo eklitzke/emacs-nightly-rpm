@@ -1,8 +1,8 @@
 diff --git a/src/gtkutil.c b/src/gtkutil.c
-index 4dbef65..44f828c 100644
+index e76b0a7..b3aa335 100644
 --- a/src/gtkutil.c
 +++ b/src/gtkutil.c
-@@ -1050,7 +1050,9 @@ style_changed_cb (GObject *go,
+@@ -1079,7 +1079,9 @@ style_changed_cb (GObject *go,
        FOR_EACH_FRAME (rest, frame)
          {
            FRAME_PTR f = XFRAME (frame);

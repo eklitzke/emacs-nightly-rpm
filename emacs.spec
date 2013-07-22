@@ -2,8 +2,8 @@
 Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
-Version: 24.2
-Release: 20%{?dist}
+Version: 24.3
+Release: 9%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -19,21 +19,21 @@ Source7: emacs-terminal.sh
 # rhbz#713600
 Patch7: emacs-spellchecker.patch
 # rhbz#830162, fixed in org-mode upstream
-Patch8: emacs-locate-library.patch
+#Patch8: emacs-locate-library.patch
 # Fix for Emacs bug #111500.
-Patch9: emacs-bz11580-eudc-bbdb.patch
+#Patch9: emacs-bz11580-eudc-bbdb.patch
 # Fix for emacs bug #922519
 Patch10: emacs-style-change-cb.patch
-# Fix for emacs bug #922519
+# Fix for emacs bug #562719
 Patch11: emacs-bell-dont-work.patch
 # Fix for emacs bug #929353
 Patch12: emacs-gtk-warning.patch
 # Fix for emacs bug #948838
 Patch13: emacs-help-update.patch
 # Fix for emacs bug #13460.
-Patch100: emacs-24.2-hunspell.patch
-# Fix for emacs bug #827033.
-Patch101: emacs-24.2-hunspell.2.patch
+Patch100: emacs-24.3-hunspell.patch
+# Fix for emacs bug #827033
+Patch101: emacs-24.3-hunspell.2.patch
 
 BuildRequires: atk-devel cairo-devel freetype-devel fontconfig-devel dbus-devel giflib-devel glibc-devel libpng-devel
 BuildRequires: libjpeg-devel libtiff-devel libX11-devel libXau-devel libXdmcp-devel libXrender-devel libXt-devel
@@ -52,6 +52,7 @@ BuildRequires: gtk3-devel python2-devel
 BuildRequires: gtk3-devel python2-devel python3-devel
 %endif
 %endif
+
 %ifarch %{ix86}
 BuildRequires: util-linux
 %endif
@@ -167,8 +168,6 @@ packages that add functionality to Emacs.
 %setup -q
 
 %patch7 -p1 -b .spellchecker
-%patch8 -p1 -b .locate-library
-%patch9 -p1 -b .emacs-bz11580-eudc-bbdb
 
 %patch10 -p1 -b .style-change-cb.patch
 %patch11 -p1 -b .bell-dont-work.patch
@@ -193,12 +192,15 @@ rm -f lisp/play/tetris.el lisp/play/tetris.elc
 rm -f etc/sex.6 etc/condom.1 etc/celibacy.1 etc/COOKIES etc/future-bug etc/JOKES
 %endif
 
-%define info_files ada-mode auth autotype calc ccmode cl dbus dired-x ebrowse ede ediff edt eieio efaq eintr elisp emacs emacs-gnutls emacs-mime epa erc ert eshell eudc flymake forms gnus idlwave info mairix-el message mh-e newsticker nxml-mode org pcl-cvs pgg rcirc reftex remember sasl sc semantic ses sieve smtpmail speedbar tramp url vip viper widget woman
+%define info_files ada-mode auth autotype bovine calc ccmode cl dbus dired-x ebrowse ede ediff edt efaq eieio eintr elisp emacs-gnutls emacs-mime emacs epa erc ert eshell eudc flymake forms gnus htmlfontify idlwave info mairix-el message mh-e newsticker nxml-mode org pcl-cvs pgg rcirc reftex remember sasl sc semantic ses sieve smtpmail speedbar srecode tramp url vip viper widget wisent woman
 
-if test "$(perl -e 'while (<>) { if (/^INFO_FILES/) { s/.*=//; while (s/\\$//) { s/\\//; $_ .= <>; }; s/\s+/ /g; s/^ //; s/ $//; print; exit; } }' Makefile.in)" != "%info_files"; then
+cd info
+files=`echo $(ls *.info) | sed 's/\.info//'g | sort | tr -d '\n'`
+if test "$files" != "%info_files"; then
   echo Please update info_files >&2
   exit 1
 fi
+cd ..
 
 %ifarch %{ix86}
 %define setarch setarch %{_arch} -R
@@ -230,8 +232,7 @@ ln -s ../configure .
 %endif
 
 %configure --with-dbus --with-gif --with-jpeg --with-png --with-rsvg \
-           --with-tiff --with-xft --with-xpm --with-x-toolkit=%{toolkit} --with-gpm=no \
-	   --with-wide-int
+           --with-tiff --with-xft --with-xpm --with-x-toolkit=%{toolkit} --with-gpm=no
 make bootstrap
 %{setarch} make %{?_smp_mflags}
 cd ..
@@ -298,6 +299,8 @@ mv %{buildroot}%{_bindir}/{etags,etags.emacs}
 mv %{buildroot}%{_mandir}/man1/{ctags.1.gz,gctags.1.gz}
 mv %{buildroot}%{_mandir}/man1/{etags.1.gz,etags.emacs.1.gz}
 mv %{buildroot}%{_bindir}/{ctags,gctags}
+# BZ 927996
+mv %{buildroot}%{_infodir}/{info.info.gz,info.gz}
 
 mkdir -p %{buildroot}%{site_lisp}/site-start.d
 
@@ -413,7 +416,7 @@ update-desktop-database &> /dev/null || :
 %{_datadir}/applications/emacs.desktop
 %{_datadir}/applications/emacsclient.desktop
 %{_datadir}/icons/hicolor/*/apps/emacs.png
-%{_datadir}/icons/hicolor/*/apps/emacs22.png
+#%{_datadir}/icons/hicolor/*/apps/emacs22.png
 %{_datadir}/icons/hicolor/scalable/apps/emacs.svg
 %{_datadir}/icons/hicolor/scalable/mimetypes/emacs-document.svg
 
@@ -430,7 +433,7 @@ update-desktop-database &> /dev/null || :
 %{_bindir}/etags.emacs
 %{_bindir}/gctags
 %{_bindir}/grep-changelog
-%{_bindir}/rcs-checkin
+#%{_bindir}/rcs-checkin
 %{_mandir}/*/*
 %{_infodir}/*
 %dir %{_datadir}/emacs/%{version}
@@ -455,30 +458,39 @@ update-desktop-database &> /dev/null || :
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
-* Mon Jul 15 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-20
-- Bump the version (#981135) to 20
+* Tue Apr 09 2013 Petr Hracek <phracek@redhat.com> - 1:24.3-9
+- Help and man page corrections (#948838)
 
-* Wed Apr 10 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-18
-- Help and manpage corrections (#948838)
+* Tue Apr 09 2013 Petr Hracek <phracek@redhat.com> - 1:24.3-8
+- Rebuild with new file package
 
-* Mon Apr 08 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-17
+* Mon Apr 08 2013 Petr Hracek <phracek@redhat.com> - 1:24.3-7
 - Spell checking broken by non-default dictionary (#827033)
 
-* Thu Apr 04 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-16
-- Fix #929353: emacs gives gtk-warning
+* Thu Apr 04 2013 Petr Hracek <phracek@redhat.com> - 1:24.3-6
+- Rebuild with new ImageMagick
 
-* Thu Mar 28 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-15
+* Thu Apr 04 2013 Petr Hracek <phracek@redhat.com> - 1:24.3-5
+- Fix for Gtk-Warning (#929353) 
+
+* Wed Apr 03 2013 Petr Hracek <phracek@redhat.com> - 1:24.3-4
+- Fix for info page. info.info.gz page was renamed to info.gz (#927996) 
+
+* Thu Mar 28 2013 Petr Hracek <phracek@redhat.com> - 1:24.3-3
 - Fix for emacs bug 112144, style_changed_cb (#922519) 
-- Fix for emacs bug 112131, bell does not work (#526719) 
+- Fix for emacs bug 112131, bell does not work (#562719) 
 
-* Tue Mar 26 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-14
-- fixing distribution flags to rhel instead of el6:1
+* Mon Mar 18 2013 Petr Hracek <phracek@redhat.com> - 1:24.3-2
+- fix #927996 correcting bug. Info pages were not delivered
 
-* Mon Mar 18 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-13
+* Mon Mar 18 2013 Petr Hracek <phracek@redhat.com> - 1:24.3-1
+- Updated to the newest upstream release
 - solved problem with distribution flag in case of rhel
+- rcs-checking not availble anymore
+- emacs22.png are not installed anymore
 
-* Mon Mar 18 2013 Petr Hracek <phracek@redhat.com> - 1:24.2-12
-- solved problem with distribution flag in case of rhel
+* Mon Mar 18 2013 Rex Dieter <rdieter@fedoraproject.org> 1:24.2-12
+- rebuild (ImageMagick)
 
 * Fri Mar 08 2013 Ralf Corsépius <corsepiu@fedoraproject.org> - 1:24.2-11
 - Remove %%config from %%{_sysconfdir}/rpm/macros.*
