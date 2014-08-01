@@ -3,7 +3,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 24.3
-Release: 18%{?dist}
+Release: 19%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -396,10 +396,10 @@ fi
 %{_sbindir}/alternatives --install %{_bindir}/emacs emacs %{_bindir}/emacs-%{version} 80
 
 %preun nox
-%{_sbindir}/alternatives --remove emacs %{_bindir}/emacs-%{version}-nox
+%{_sbindir}/alternatives --remove emacs-nox %{_bindir}/emacs-%{version}-nox
 
 %posttrans nox
-%{_sbindir}/alternatives --install %{_bindir}/emacs emacs %{_bindir}/emacs-%{version}-nox 70
+%{_sbindir}/alternatives --install %{_bindir}/emacs-nox emacs-nox %{_bindir}/emacs-%{version}-nox 70
 
 %post common
 for f in %{info_files}; do
@@ -472,6 +472,9 @@ update-desktop-database &> /dev/null || :
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
+* Fri Aug 01 2014 Petr Hracek <phracek@redhat.com> - 1:24.3-19
+- Provide /usr/bin/emacs-nox (#1123573)
+
 * Tue Jul 29 2014 Petr Hracek <phracek@redhat.com> - 1:24.3-18
 - Add patch to remove timstamp from .elc files (#1122157)
 
