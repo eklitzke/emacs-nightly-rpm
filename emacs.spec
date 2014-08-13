@@ -3,7 +3,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 24.3
-Release: 22%{?dist}
+Release: 23%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -16,6 +16,7 @@ Source5: default.el
 # Emacs Terminal Mode, #551949, #617355
 Source6: emacs-terminal.desktop
 Source7: emacs-terminal.sh
+Source8: emacs.service
 # rhbz#713600
 Patch7: emacs-spellchecker.patch
 
@@ -50,6 +51,7 @@ BuildRequires: libXpm-devel ncurses-devel xorg-x11-proto-devel zlib-devel gnutls
 BuildRequires: librsvg2-devel m17n-lib-devel libotf-devel ImageMagick-devel libselinux-devel
 BuildRequires: GConf2-devel alsa-lib-devel gpm-devel liblockfile-devel libxml2-devel
 BuildRequires: bzip2 cairo texinfo gzip desktop-file-utils
+BuildRequires: systemd
 
 %if 0%{?rhel} == 6
 BuildRequires: gtk2-devel
@@ -343,6 +345,10 @@ install -p -m 755 %SOURCE7 %{buildroot}%{_bindir}/emacs-terminal
 rm -f %{buildroot}%{_infodir}/dir
 rm %{buildroot}%{_localstatedir}/games/emacs/*
 
+# Installing service file
+mkdir -p %{buildroot}%{_userunitdir}
+install -p -m 0644 %SOURCE8 %{buildroot}%{_userunitdir}/emacs.service
+
 # Install desktop files
 mkdir -p %{buildroot}%{_datadir}/applications
 desktop-file-install --dir=%{buildroot}%{_datadir}/applications \
@@ -457,6 +463,7 @@ update-desktop-database &> /dev/null || :
 %{_datadir}/emacs/%{version}/etc
 %{_datadir}/emacs/%{version}/site-lisp
 %{_libexecdir}/emacs
+%{_userunitdir}/emacs.service
 %attr(0644,root,root) %config(noreplace) %{_datadir}/emacs/site-lisp/default.el
 %attr(0644,root,root) %config %{_datadir}/emacs/site-lisp/site-start.el
 
@@ -475,6 +482,9 @@ update-desktop-database &> /dev/null || :
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
+* Mon Aug 11 2014 Petr Hracek <phracek@redhat.com> - 1:24.3-23
+- emacs.service file for systemd (#1128723)
+
 * Tue Aug 05 2014 jchaloup <jchaloup@redhat.com> - 1:24.3-22
 - resolves: #1104012
   initialize kbd_macro_ptr and kbd_macro_end to kdb_macro_buffer
