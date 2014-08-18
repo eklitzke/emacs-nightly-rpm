@@ -3,7 +3,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 24.3
-Release: 23%{?dist}
+Release: 24%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -405,10 +405,12 @@ fi
 %{_sbindir}/alternatives --install %{_bindir}/emacs emacs %{_bindir}/emacs-%{version} 80
 
 %preun nox
+%{_sbindir}/alternatives --remove emacs %{_bindir}/emacs-%{version}-nox
 %{_sbindir}/alternatives --remove emacs-nox %{_bindir}/emacs-%{version}-nox
 
 %posttrans nox
-%{_sbindir}/alternatives --install %{_bindir}/emacs-nox emacs-nox %{_bindir}/emacs-%{version}-nox 70
+%{_sbindir}/alternatives --install %{_bindir}/emacs emacs %{_bindir}/emacs-%{version}-nox 70
+%{_sbindir}/alternatives --install %{_bindir}/emacs-nox emacs-nox %{_bindir}/emacs-%{version}-nox 60
 
 %post common
 for f in %{info_files}; do
@@ -445,6 +447,7 @@ update-desktop-database &> /dev/null || :
 
 %files nox
 %{_bindir}/emacs-%{version}-nox
+%attr(0755,-,-) %ghost %{_bindir}/emacs
 %attr(0755,-,-) %ghost %{_bindir}/emacs-nox
 
 %files -f common-filelist common
@@ -482,6 +485,10 @@ update-desktop-database &> /dev/null || :
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
+* Mon Aug 18 2014 jchaloup <jchaloup@redhat.com> - 1:24.3-24
+- resolves: #1130587
+  unremove emacs from emacs-nox package, emacs and emacs-nox co-exist
+
 * Mon Aug 11 2014 Petr Hracek <phracek@redhat.com> - 1:24.3-23
 - emacs.service file for systemd (#1128723)
 
