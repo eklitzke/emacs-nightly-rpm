@@ -1,0 +1,343 @@
+diff --git a/doc/lispref/frames.texi b/doc/lispref/frames.texi
+index d5617ed..bdde43f 100644
+--- a/doc/lispref/frames.texi
++++ b/doc/lispref/frames.texi
+@@ -1393,6 +1393,18 @@ terminal.  @xref{DEL Does Not Delete,,, emacs, The Emacs Manual}.
+ @item terminal-initted
+ After the terminal is initialized, this is set to the
+ terminal-specific initialization function.
++@item tty-mode-set-strings
++When present, a list of strings containing escape sequences that Emacs
++will output while configuring a tty for rendering. Emacs emits these
++strings only when configuring a terminal: if you want to enable a mode
++on a terminal that is already active (for example, while in
++@code{tty-setup-hook}), explicitly output the necessary escape
++sequence using @code{send-string-to-terminal} in addition to adding
++the sequence to @code{tty-mode-set-strings}.
++@item tty-mode-reset-strings
++When present, a list of strings that undo the effects of the strings
++in @code{tty-mode-set-strings}. Emacs emits these strings when
++exiting, deleting a terminal, or suspending itself.
+ @end table
+ 
+ @node Frame Titles
+diff --git a/lisp/term/screen.el b/lisp/term/screen.el
+index d37a695..1731f5a 100644
+--- a/lisp/term/screen.el
++++ b/lisp/term/screen.el
+@@ -1,12 +1,9 @@
+-;; Treat a screen terminal similar to an xterm.
+-(load "term/xterm")
+-
+-(declare-function xterm-register-default-colors "xterm" ())
++;;; screen.el --- terminal initialization for screen and tmux -*- lexical-binding: t -*-
++;; Copyright (C) 1995, 2001-2014 Free Software Foundation, Inc.
+ 
+ (defun terminal-init-screen ()
+   "Terminal initialization function for screen."
+-  ;; Use the xterm color initialization code.
+-  (xterm-register-default-colors)
+-  (tty-set-up-initial-frame-faces))
++ ;; Treat a screen terminal similar to an xterm.
++ (tty-run-terminal-initialization (selected-frame) "xterm"))
+ 
+ ;; screen.el ends here
+diff --git a/lisp/term/xterm.el b/lisp/term/xterm.el
+index ba017e9..a267f93 100644
+--- a/lisp/term/xterm.el
++++ b/lisp/term/xterm.el
+@@ -43,10 +43,35 @@ The relevant features are:
+   :type '(choice (const :tag "No" nil)
+                  (const :tag "Check" check)
+                  ;; NOTE: If you add entries here, make sure to update
+-                 ;; `tocheck-capabilities' in `terminal-init-xterm' as well.
++                 ;; `terminal-init-xterm' as well.
+                  (set (const :tag "modifyOtherKeys support" modifyOtherKeys)
+                       (const :tag "report background" reportBackground))))
+ 
++(defconst xterm-paste-ending-sequence "\e[201~"
++ "Characters send by the terminal to end a bracketed paste.")
++
++(defun xterm-paste ()
++  "Handle the start of a terminal paste operation."
++  (interactive)
++  (let* ((end-marker-length (length xterm-paste-ending-sequence))
++	 (pasted-text (with-temp-buffer
++			(set-buffer-multibyte nil)
++			(while (not (search-backward
++				     xterm-paste-ending-sequence
++				     (- (point) end-marker-length) t))
++			  (let ((event (read-event)))
++			    (when (eql event ?\r)
++			      (setf event ?\n))
++			    (insert event)))
++			(let ((last-coding-system-used))
++			  (decode-coding-region
++			   (point-min) (point)
++			   (keyboard-coding-system) t))))
++	 (interprogram-paste-function (lambda () pasted-text)))
++    (yank)))
++
++(define-key global-map [xterm-paste] #'xterm-paste)
++
+ (defvar xterm-function-map
+   (let ((map (make-sparse-keymap)))
+ 
+@@ -394,6 +419,11 @@ The relevant features are:
+     (define-key map "\e[12~" [f2])
+     (define-key map "\e[13~" [f3])
+     (define-key map "\e[14~" [f4])
++
++    ;; Recognize the start of a bracketed paste sequence. The handler
++    ;; internally recognizes the end.
++    (define-key map "\e[200~" [xterm-paste])
++
+     map)
+   "Function key map overrides for xterm.")
+ 
+@@ -463,9 +493,6 @@ The relevant features are:
+     map)
+   "Keymap of possible alternative meanings for some keys.")
+ 
+-;; List of terminals for which modify-other-keys has been turned on.
+-(defvar xterm-modify-other-keys-terminal-list nil)
+-
+ (defun xterm--report-background-handler ()
+   (let ((str "")
+         chr)
+@@ -605,21 +632,23 @@ We run the first FUNCTION whose STRING matches the input events."
+     (when (memq 'modifyOtherKeys xterm-extra-capabilities)
+       (terminal-init-xterm-modify-other-keys)))
+ 
++  ;; Unconditionally enable bracketed paste mode: terminals that don't
++  ;; support it just ignore the sequence.
++  (terminal-init-xterm-bracketed-paste-mode)
++
+   (run-hooks 'terminal-init-xterm-hook))
+ 
+ (defun terminal-init-xterm-modify-other-keys ()
+   "Terminal initialization for xterm's modifyOtherKeys support."
+-  ;; Make sure that the modifyOtherKeys state is restored when
+-  ;; suspending, resuming and exiting.
+-  (add-hook 'suspend-hook 'xterm-turn-off-modify-other-keys)
+-  (add-hook 'suspend-resume-hook 'xterm-turn-on-modify-other-keys)
+-  (add-hook 'kill-emacs-hook 'xterm-remove-modify-other-keys)
+-  (add-hook 'delete-terminal-functions 'xterm-remove-modify-other-keys)
+-  ;; Add the selected frame to the list of frames that
+-  ;; need to deal with modify-other-keys.
+-  (push (frame-terminal)
+-      xterm-modify-other-keys-terminal-list)
+-  (xterm-turn-on-modify-other-keys))
++  (send-string-to-terminal "\e[>4;1m")
++  (push "\e[>4m" (terminal-parameter nil 'tty-mode-reset-strings))
++  (push "\e[>4;1m" (terminal-parameter nil 'tty-mode-set-strings)))
++
++(defun terminal-init-xterm-bracketed-paste-mode ()
++  "Terminal initialization for bracketed paste mode."
++  (send-string-to-terminal "\e[?2004h")
++  (push "\e[?2004l" (terminal-parameter nil 'tty-mode-reset-strings))
++  (push "\e[?2004h" (terminal-parameter nil 'tty-mode-set-strings)))
+ 
+ ;; Set up colors, for those versions of xterm that support it.
+ (defvar xterm-standard-colors
+@@ -737,29 +766,6 @@ versions of xterm."
+     ;; right colors, so clear them.
+     (clear-face-cache)))
+ 
+-(defun xterm-turn-on-modify-other-keys ()
+-  "Turn the modifyOtherKeys feature of xterm back on."
+-  (let ((terminal (frame-terminal)))
+-    (when (and (terminal-live-p terminal)
+-	       (memq terminal xterm-modify-other-keys-terminal-list))
+-      (send-string-to-terminal "\e[>4;1m" terminal))))
+-
+-(defun xterm-turn-off-modify-other-keys (&optional frame)
+-  "Temporarily turn off the modifyOtherKeys feature of xterm."
+-  (let ((terminal (when frame (frame-terminal frame))))
+-    (when (and (terminal-live-p terminal)
+-               (memq terminal xterm-modify-other-keys-terminal-list))
+-      (send-string-to-terminal "\e[>4m" terminal))))
+-
+-(defun xterm-remove-modify-other-keys (&optional terminal)
+-  "Turn off the modifyOtherKeys feature of xterm for good."
+-  (setq terminal (or terminal (frame-terminal)))
+-  (when (and (terminal-live-p terminal)
+-	     (memq terminal xterm-modify-other-keys-terminal-list))
+-    (setq xterm-modify-other-keys-terminal-list
+-	  (delq terminal xterm-modify-other-keys-terminal-list))
+-    (send-string-to-terminal "\e[>4m" terminal)))
+-
+ (defun xterm-maybe-set-dark-background-mode (redc greenc bluec)
+   ;; Use the heuristic in `frame-set-background-mode' to decide if a
+   ;; frame is dark.
+diff --git a/lisp/xt-mouse.el b/lisp/xt-mouse.el
+index 59ed68a..371ad6b 100644
+--- a/lisp/xt-mouse.el
++++ b/lisp/xt-mouse.el
+@@ -267,36 +267,27 @@ single clicks are supported.  When turned on, the normal xterm
+ mouse functionality for such clicks is still available by holding
+ down the SHIFT key while pressing the mouse button."
+   :global t :group 'mouse
+-  (let ((do-hook (if xterm-mouse-mode 'add-hook 'remove-hook)))
+-    (funcall do-hook 'terminal-init-xterm-hook
+-             'turn-on-xterm-mouse-tracking-on-terminal)
+-    (funcall do-hook 'delete-terminal-functions
+-             'turn-off-xterm-mouse-tracking-on-terminal)
+-    (funcall do-hook 'suspend-tty-functions
+-             'turn-off-xterm-mouse-tracking-on-terminal)
+-    (funcall do-hook 'resume-tty-functions
+-             'turn-on-xterm-mouse-tracking-on-terminal)
+-    (funcall do-hook 'suspend-hook 'turn-off-xterm-mouse-tracking)
+-    (funcall do-hook 'suspend-resume-hook 'turn-on-xterm-mouse-tracking)
+-    (funcall do-hook 'kill-emacs-hook 'turn-off-xterm-mouse-tracking))
++  (funcall (if xterm-mouse-mode 'add-hook 'remove-hook)
++	   'terminal-init-xterm-hook
++	   'turn-on-xterm-mouse-tracking-on-terminal)
+   (if xterm-mouse-mode
+       ;; Turn it on
+       (progn
+ 	(setq mouse-position-function #'xterm-mouse-position-function)
+-	(turn-on-xterm-mouse-tracking))
++	(mapc #'turn-on-xterm-mouse-tracking-on-terminal (terminal-list)))
+     ;; Turn it off
+-    (turn-off-xterm-mouse-tracking 'force)
++    (mapc #'turn-off-xterm-mouse-tracking-on-terminal (terminal-list))
+     (setq mouse-position-function nil)))
+ 
+-(defun turn-on-xterm-mouse-tracking ()
+-  "Enable Emacs mouse tracking in xterm."
+-  (dolist (terminal (terminal-list))
+-    (turn-on-xterm-mouse-tracking-on-terminal terminal)))
++(defconst xterm-mouse-tracking-enable-sequence
++  "\e[?1000h\e[?1006h"
++  "Control sequence to enable xterm mouse tracking.
++Enables basic tracking, then extended tracking on
++terminals that support it.")
+ 
+-(defun turn-off-xterm-mouse-tracking (&optional _force)
+-  "Disable Emacs mouse tracking in xterm."
+-  (dolist (terminal (terminal-list))
+-    (turn-off-xterm-mouse-tracking-on-terminal terminal)))
++(defconst xterm-mouse-tracking-disable-sequence
++ "\e[?1006l\e[?1000l"
++ "Reset the modes set by `xterm-mouse-tracking-enable-sequence'.")
+ 
+ (defun turn-on-xterm-mouse-tracking-on-terminal (&optional terminal)
+   "Enable xterm mouse tracking on TERMINAL."
+@@ -306,30 +297,36 @@ down the SHIFT key while pressing the mouse button."
+ 	     (not (string= (terminal-name terminal) "initial_terminal")))
+     (unless (terminal-parameter terminal 'xterm-mouse-mode)
+       ;; Simulate selecting a terminal by selecting one of its frames
++      ;; so that we can set the terminal-local `input-decode-map'.
+       (with-selected-frame (car (frames-on-display-list terminal))
+         (define-key input-decode-map "\e[M" 'xterm-mouse-translate)
+         (define-key input-decode-map "\e[<" 'xterm-mouse-translate-extended))
+-      (set-terminal-parameter terminal 'xterm-mouse-mode t))
+-    (send-string-to-terminal "\e[?1000h" terminal)
+-    ;; Request extended mouse support, if available (xterm >= 277).
+-    (send-string-to-terminal "\e[?1006h" terminal)))
++      (send-string-to-terminal xterm-mouse-tracking-enable-sequence terminal)
++      (push xterm-mouse-tracking-enable-sequence
++	    (terminal-parameter nil 'tty-mode-set-strings))
++      (push xterm-mouse-tracking-disable-sequence
++	    (terminal-parameter nil 'tty-mode-reset-strings))
++      (set-terminal-parameter terminal 'xterm-mouse-mode t))))
+ 
+ (defun turn-off-xterm-mouse-tracking-on-terminal (terminal)
+   "Disable xterm mouse tracking on TERMINAL."
+   ;; Only send the disable command to those terminals to which we've already
+   ;; sent the enable command.
+   (when (and (terminal-parameter terminal 'xterm-mouse-mode)
+-             (eq t (terminal-live-p terminal))
+-	     ;; Avoid the initial terminal which is not a termcap device.
+-	     ;; FIXME: is there more elegant way to detect the initial terminal?
+-	     (not (string= (terminal-name terminal) "initial_terminal")))
++             (eq t (terminal-live-p terminal)))
+     ;; We could remove the key-binding and unset the `xterm-mouse-mode'
+     ;; terminal parameter, but it seems less harmful to send this escape
+     ;; command too many times (or to catch an unintended key sequence), than
+     ;; to send it too few times (or to fail to let xterm-mouse events
+     ;; pass by untranslated).
+-    (send-string-to-terminal "\e[?1000l" terminal)
+-    (send-string-to-terminal "\e[?1006l" terminal)))
++    (send-string-to-terminal xterm-mouse-tracking-disable-sequence terminal)
++    (setf (terminal-parameter nil 'tty-mode-set-strings)
++	  (remq xterm-mouse-tracking-enable-sequence
++		(terminal-parameter nil 'tty-mode-set-strings)))
++    (setf (terminal-parameter nil 'tty-mode-reset-strings)
++	  (remq xterm-mouse-tracking-disable-sequence
++		(terminal-parameter nil 'tty-mode-reset-strings)))
++    (set-terminal-parameter terminal 'xterm-mouse-mode nil)))
+ 
+ (provide 'xt-mouse)
+ 
+diff --git a/src/term.c b/src/term.c
+index 8661cba..59f630c 100644
+--- a/src/term.c
++++ b/src/term.c
+@@ -131,6 +131,9 @@ enum no_color_bit
+ 
+ static int max_frame_cols;
+ 
++static Lisp_Object Qtty_mode_set_strings;
++static Lisp_Object Qtty_mode_reset_strings;
++
+ 
+ 
+ #ifdef HAVE_GPM
+@@ -162,6 +165,29 @@ tty_ring_bell (struct frame *f)
+ /* Set up termcap modes for Emacs. */
+ 
+ static void
++tty_send_additional_strings (struct terminal* terminal, Lisp_Object sym)
++{
++  Lisp_Object lisp_terminal;
++  Lisp_Object extra_codes;
++  struct tty_display_info *tty = terminal->display_info.tty;
++
++  XSETTERMINAL (lisp_terminal, terminal);
++  for (extra_codes = Fterminal_parameter (lisp_terminal, sym);
++       CONSP (extra_codes);
++       extra_codes = XCDR (extra_codes))
++    {
++      Lisp_Object string = XCAR (extra_codes);
++      if (STRINGP (string))
++	{
++	  fwrite (SDATA (string), 1, SBYTES (string), tty->output);
++	  fflush (tty->output);
++	  if (tty->termscript)
++	    fwrite (SDATA (string), 1, SBYTES (string), tty->termscript);
++	}
++    }
++}
++
++static void
+ tty_set_terminal_modes (struct terminal *terminal)
+ {
+   struct tty_display_info *tty = terminal->display_info.tty;
+@@ -184,6 +210,7 @@ tty_set_terminal_modes (struct terminal *terminal)
+       OUTPUT_IF (tty, tty->TS_keypad_mode);
+       losecursor (tty);
+       fflush (tty->output);
++      tty_send_additional_strings (terminal, Qtty_mode_set_strings);
+     }
+ }
+ 
+@@ -196,6 +223,7 @@ tty_reset_terminal_modes (struct terminal *terminal)
+ 
+   if (tty->output)
+     {
++      tty_send_additional_strings(terminal, Qtty_mode_reset_strings);
+       tty_turn_off_highlight (tty);
+       tty_turn_off_insert (tty);
+       OUTPUT_IF (tty, tty->TS_end_keypad_mode);
+@@ -4577,6 +4605,9 @@ bigger, or it may make it blink, or it may do nothing at all.  */);
+   encode_terminal_src = NULL;
+   encode_terminal_dst = NULL;
+ 
++  DEFSYM (Qtty_mode_set_strings, "tty-mode-set-strings");
++  DEFSYM (Qtty_mode_reset_strings, "tty-mode-reset-strings");
++
+ #ifndef MSDOS
+   DEFSYM (Qtty_menu_next_item, "tty-menu-next-item");
+   DEFSYM (Qtty_menu_prev_item, "tty-menu-prev-item");

@@ -3,7 +3,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 24.4
-Release: 3%{?dist}
+Release: 4%{?dist}
 License: GPLv3+ and CC0-1.0
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -23,6 +23,7 @@ Patch1: emacs-spellchecker.patch
 
 # Fix for default PDF viewer bug #971162
 Patch2: emacs-pdf-default.patch
+Patch3: emacs-adds-extra-spaces.patch
 
 BuildRequires: atk-devel cairo-devel freetype-devel fontconfig-devel dbus-devel giflib-devel glibc-devel libpng-devel
 BuildRequires: libjpeg-devel libtiff-devel libX11-devel libXau-devel libXdmcp-devel libXrender-devel libXt-devel
@@ -148,6 +149,7 @@ packages that add functionality to Emacs.
 
 %patch1 -p1 -b .spellchecker
 %patch2 -p1 -b .pdf-default.patch
+%patch3 -p1 -b .add-extra-spaces
 
 # We prefer our emacs.desktop file
 cp %SOURCE1 etc/emacs.desktop
@@ -431,6 +433,9 @@ update-desktop-database &> /dev/null || :
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
+* Wed Mar 04 2015 Petr Hracek <phracek@redhat.com> - 1:24.4-4
+- emacs adds extra spaces on copy/paste (#1161786)
+
 * Tue Nov 18 2014 Petr Hracek <phracek@redhat.com> - 1:24.4-3
 - Resolves #1124892 Add appdata file
 
