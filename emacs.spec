@@ -3,7 +3,7 @@ Summary:        GNU Emacs text editor
 Name:           emacs
 Epoch:          1
 Version:        24.4
-Release:        5%{?dist}
+Release:        6%{?dist}
 License:        GPLv3+ and CC0-1.0
 URL:            http://www.gnu.org/software/emacs/
 Group:          Applications/Editors
@@ -25,6 +25,7 @@ Patch1:         emacs-spellchecker.patch
 Patch2:         emacs-pdf-default.patch
 Patch3:         emacs-adds-extra-spaces.patch
 Patch4:         emacs-no-bitmap-icon.patch
+Patch5:         emacs-grep-deprecated.patch
 
 BuildRequires:  atk-devel cairo-devel freetype-devel fontconfig-devel dbus-devel giflib-devel glibc-devel libpng-devel
 BuildRequires:  libjpeg-devel libtiff-devel libX11-devel libXau-devel libXdmcp-devel libXrender-devel libXt-devel
@@ -53,8 +54,8 @@ BuildRequires:  util-linux
 Requires:       desktop-file-utils dejavu-sans-mono-fonts
 Requires(preun): %{_sbindir}/alternatives
 Requires(posttrans): %{_sbindir}/alternatives
-Requires: emacs-common = %{epoch}:%{version}-%{release}
-Provides: emacs(bin) = %{epoch}:%{version}-%{release}
+Requires:       emacs-common = %{epoch}:%{version}-%{release}
+Provides:       emacs(bin) = %{epoch}:%{version}-%{release}
 
 %if 0%{!?rhel:1}
 # Turn off the brp-python-bytecompile script since this script doesn't
@@ -85,12 +86,12 @@ without leaving the editor.
 This package provides an emacs binary with support for X windows.
 
 %package nox
-Summary: GNU Emacs text editor without X support
-Group: Applications/Editors
+Summary:        GNU Emacs text editor without X support
+Group:          Applications/Editors
 Requires(preun): %{_sbindir}/alternatives
 Requires(posttrans): %{_sbindir}/alternatives
-Requires: emacs-common = %{epoch}:%{version}-%{release}
-Provides: emacs(bin) = %{epoch}:%{version}-%{release}
+Requires:       emacs-common = %{epoch}:%{version}-%{release}
+Provides:       emacs(bin) = %{epoch}:%{version}-%{release}
 
 %description nox
 Emacs is a powerful, customizable, self-documenting, modeless text
@@ -102,18 +103,18 @@ This package provides an emacs binary with no X windows support for running
 on a terminal.
 
 %package common
-Summary: Emacs common files
+Summary:        Emacs common files
 # The entire source code is GPLv3+ except lib-src/etags.c which is
 # also BSD.  Manual (info) is GFDL.
-License: GPLv3+ and GFDL and BSD
-Group: Applications/Editors
+License:        GPLv3+ and GFDL and BSD
+Group:          Applications/Editors
 Requires(preun): /sbin/install-info
 Requires(preun): %{_sbindir}/alternatives
 Requires(posttrans): %{_sbindir}/alternatives
 Requires(post): /sbin/install-info
-Requires: %{name}-filesystem = %{epoch}:%{version}-%{release}
-Provides: %{name}-el = %{epoch}:%{version}-%{release}
-Obsoletes: emacs-el < 1:24.3-28
+Requires:       %{name}-filesystem = %{epoch}:%{version}-%{release}
+Provides:       %{name}-el = %{epoch}:%{version}-%{release}
+Obsoletes:      emacs-el < 1:24.3-28
 
 %description common
 Emacs is a powerful, customizable, self-documenting, modeless text
@@ -124,10 +125,10 @@ without leaving the editor.
 This package contains all the common files needed by emacs or emacs-nox.
 
 %package terminal
-Summary: A desktop menu item for GNU Emacs terminal.
-Group: Applications/Editors
-Requires: emacs = %{epoch}:%{version}-%{release}
-BuildArch: noarch
+Summary:        A desktop menu item for GNU Emacs terminal.
+Group:          Applications/Editors
+Requires:       emacs = %{epoch}:%{version}-%{release}
+BuildArch:      noarch
 
 %description terminal
 Contains a desktop menu item running GNU Emacs terminal. Install
@@ -137,9 +138,9 @@ Please note that emacs-terminal is a temporary package and it will be
 removed when another terminal becomes capable of handling Malayalam.
 
 %package filesystem
-Summary: Emacs filesystem layout
-Group: Applications/Editors
-BuildArch: noarch
+Summary:        Emacs filesystem layout
+Group:          Applications/Editors
+BuildArch:      noarch
 
 %description filesystem
 This package provides some directories which are required by other
@@ -152,6 +153,7 @@ packages that add functionality to Emacs.
 %patch2 -p1 -b .pdf-default.patch
 %patch3 -p1 -b .add-extra-spaces
 %patch4 -p1 -b .no-bitmap-icon
+%patch5 -p1 -b .grep-deprecated
 
 # We prefer our emacs.desktop file
 cp %SOURCE1 etc/emacs.desktop
@@ -435,6 +437,9 @@ update-desktop-database &> /dev/null || :
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
+* Tue Apr  7 2015 Petr Hracek <phracek@redhat.com> - 1:24.4-6
+- emacs grep warns 'GREP_OPTIONS is deprecated' (#1176547)
+
 * Fri Mar 27 2015 Petr Hracek <phracek@redhat.com> - 1:24.4-5
 - emacs option --no-bitmap-icon does not work (#1199160)
 
