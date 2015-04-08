@@ -3,7 +3,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 24.3
-Release: 25%{?dist}
+Release: 26%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -44,6 +44,7 @@ Patch21: emacs-CVE-2014-3424.patch
 Patch22: emacs-compiled-timestamps.patch
 # BZ1104012, initialize kbd_macro_ptr and kbd_macro_end
 Patch23: emacs-24.3-macro.patch
+Patch24: emacs-umlaut-tex-mode.patch
 
 BuildRequires: atk-devel cairo-devel freetype-devel fontconfig-devel dbus-devel giflib-devel glibc-devel libpng-devel
 BuildRequires: libjpeg-devel libtiff-devel libX11-devel libXau-devel libXdmcp-devel libXrender-devel libXt-devel
@@ -195,6 +196,7 @@ packages that add functionality to Emacs.
 %patch21 -p1 -b .CVE-2014-3424.patch
 %patch22 -p1 -b .compiled-timestamps
 %patch23 -p1
+%patch24 -p1 -b .umlaut-tex-mode
 
 # We prefer our emacs.desktop file
 cp %SOURCE1 etc/emacs.desktop
@@ -485,6 +487,9 @@ update-desktop-database &> /dev/null || :
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
+* Wed Apr  8 2015 Petr Hracek <phracek@redhat.com> - 1:24.3-26
+- Cannot enter umlaut in TeX input mode (#1145526)
+
 * Tue Sep 30 2014 jchaloup <jchaloup@redhat.com> - 1:24.3-25
 - resolves: #1147912
   Service dont start. Must be replace: "Type=Forking" > "Type=forking".
