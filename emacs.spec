@@ -2,8 +2,8 @@
 Summary:        GNU Emacs text editor
 Name:           emacs
 Epoch:          1
-Version:        24.4
-Release:        6%{?dist}
+Version:        24.5
+Release:        1%{?dist}
 License:        GPLv3+ and CC0-1.0
 URL:            http://www.gnu.org/software/emacs/
 Group:          Applications/Editors
@@ -23,9 +23,6 @@ Patch1:         emacs-spellchecker.patch
 
 # Fix for default PDF viewer bug #971162
 Patch2:         emacs-pdf-default.patch
-Patch3:         emacs-adds-extra-spaces.patch
-Patch4:         emacs-no-bitmap-icon.patch
-Patch5:         emacs-grep-deprecated.patch
 
 BuildRequires:  atk-devel cairo-devel freetype-devel fontconfig-devel dbus-devel giflib-devel glibc-devel libpng-devel
 BuildRequires:  libjpeg-devel libtiff-devel libX11-devel libXau-devel libXdmcp-devel libXrender-devel libXt-devel
@@ -151,9 +148,6 @@ packages that add functionality to Emacs.
 
 %patch1 -p1 -b .spellchecker
 %patch2 -p1 -b .pdf-default.patch
-%patch3 -p1 -b .add-extra-spaces
-%patch4 -p1 -b .no-bitmap-icon
-%patch5 -p1 -b .grep-deprecated
 
 # We prefer our emacs.desktop file
 cp %SOURCE1 etc/emacs.desktop
@@ -437,6 +431,9 @@ update-desktop-database &> /dev/null || :
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
+* Fri Apr 17 2015 Petr Hracek <phracek@redhat.com> - 1:24.5-1
+- New upstream version 24.5 (#1210919)
+
 * Tue Apr  7 2015 Petr Hracek <phracek@redhat.com> - 1:24.4-6
 - emacs grep warns 'GREP_OPTIONS is deprecated' (#1176547)
 
