@@ -3,7 +3,7 @@ Summary: GNU Emacs text editor
 Name: emacs
 Epoch: 1
 Version: 24.3
-Release: 26%{?dist}
+Release: 27%{?dist}
 License: GPLv3+
 URL: http://www.gnu.org/software/emacs/
 Group: Applications/Editors
@@ -45,6 +45,7 @@ Patch22: emacs-compiled-timestamps.patch
 # BZ1104012, initialize kbd_macro_ptr and kbd_macro_end
 Patch23: emacs-24.3-macro.patch
 Patch24: emacs-umlaut-tex-mode.patch
+Patch25: emacs-CVE-2014-9483.patch
 
 BuildRequires: atk-devel cairo-devel freetype-devel fontconfig-devel dbus-devel giflib-devel glibc-devel libpng-devel
 BuildRequires: libjpeg-devel libtiff-devel libX11-devel libXau-devel libXdmcp-devel libXrender-devel libXt-devel
@@ -197,6 +198,7 @@ packages that add functionality to Emacs.
 %patch22 -p1 -b .compiled-timestamps
 %patch23 -p1
 %patch24 -p1 -b .umlaut-tex-mode
+%patch25 -p1 -b .CVE-2014-9483
 
 # We prefer our emacs.desktop file
 cp %SOURCE1 etc/emacs.desktop
@@ -487,6 +489,9 @@ update-desktop-database &> /dev/null || :
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
+* Tue May 26 2015 Petr Hracek <phracek@redhat.com> - 1:24.3-27
+- Fixes CVE-2014-9483 (#1181599)
+
 * Wed Apr  8 2015 Petr Hracek <phracek@redhat.com> - 1:24.3-26
 - Cannot enter umlaut in TeX input mode (#1145526)
 
