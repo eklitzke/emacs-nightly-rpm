@@ -28,6 +28,8 @@ Patch2:        emacs-pdf-default.patch
 Patch3:        emacs-grep-deprecated.patch
 Patch4:        emacs-system-crypto-policies.patch
 Patch5:        emacs-bbdb.patch
+# http://git.savannah.gnu.org/cgit/emacs.git/commit/?id=06083cf41c473404d246de9b91a0116f38c5485f
+Patch6:        emacs-mercurial.patch
 
 BuildRequires: atk-devel
 BuildRequires: cairo-devel
@@ -191,6 +193,7 @@ packages that add functionality to Emacs.
 %patch3 -p1 -b .grep-deprecated
 %patch4 -p1 -b .system-crypto-policies
 %patch5 -p1 -b .bbdb
+%patch6 -p1
 autoconf
 
 # We prefer our emacs.desktop file
@@ -480,6 +483,9 @@ update-desktop-database &> /dev/null || :
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
+* Tue Feb  2 2016 Jan Synáček <jsynacek@redhat.com> - 1:24.5-9
+- emacs "deadlocked" after using mercurial with huge amounts of ignored files in the repository (#1232422)
+
 * Fri Sep 18 2015 Richard Hughes <rhughes@redhat.com> - 1:24.5-7
 - Remove no longer required AppData file
 
