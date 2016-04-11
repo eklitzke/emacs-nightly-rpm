@@ -1,0 +1,11 @@
+--- a/lisp/net/eww.el	2016-04-11 12:30:43.233531429 +0200
++++ b/lisp/net/eww.el	2015-04-02 09:23:06.000000000 +0200
+@@ -1001,7 +1001,7 @@
+       (when (and (consp elem)
+ 		 (eq (car elem) 'hidden))
+ 	(push (cons (plist-get (cdr elem) :name)
+-		    (plist-get (cdr elem) :value))
++		    (or (plist-get (cdr elem) :value) ""))
+ 	      values)))
+     (if (and (stringp (cdr (assq :method form)))
+ 	     (equal (downcase (cdr (assq :method form))) "post"))

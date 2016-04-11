@@ -5,7 +5,7 @@ Summary:       GNU Emacs text editor
 Name:          emacs
 Epoch:         1
 Version:       24.5
-Release:       7%{?dist}
+Release:       10%{?dist}
 License:       GPLv3+ and CC0-1.0
 URL:           http://www.gnu.org/software/emacs/
 Group:         Applications/Editors
@@ -33,6 +33,8 @@ Patch6:        emacs-mercurial.patch
 # http://git.savannah.gnu.org/cgit/emacs.git/commit/?id=439f483be35a000e7a3bec6acf395ce4d54d6323
 # http://git.savannah.gnu.org/cgit/emacs.git/commit/?id=9c86325b69d75e9b17ff468f5a2220597979635f
 Patch7:        emacs-gdb-ascii.patch
+# http://git.savannah.gnu.org/cgit/emacs.git/commit/?id=cc6340495d3ec78dea0b906dccfea90973fbeb12
+Patch8:        emacs-eww-submit.patch
 
 BuildRequires: atk-devel
 BuildRequires: cairo-devel
@@ -198,6 +200,7 @@ packages that add functionality to Emacs.
 %patch5 -p1 -b .bbdb
 %patch6 -p1
 %patch7 -p1
+%patch8 -p1
 autoconf
 
 # We prefer our emacs.desktop file
@@ -487,6 +490,9 @@ update-desktop-database &> /dev/null || :
 %dir %{_datadir}/emacs/site-lisp/site-start.d
 
 %changelog
+* Mon Apr 11 2016 Jan Synáček <jsynacek@redhat.com> - 1:24.5-10
+- eww form submission fails in google search (#1325639)
+
 * Tue Feb  2 2016 Jan Synáček <jsynacek@redhat.com> - 1:24.5-9
 - emacs "deadlocked" after using mercurial with huge amounts of ignored files in the repository (#1232422)
 - GDB interface gets confused by non-ASCII (#1283412)
