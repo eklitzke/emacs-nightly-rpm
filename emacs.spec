@@ -1,14 +1,16 @@
 %global _hardened_build 1
+%global commit      d0e558c0025b295bbd8c51122600d1083ed6d391
+%global shortcommit %(c=%{commit}; echo ${c:0:7})
 
 # This file is encoded in UTF-8.  -*- coding: utf-8 -*-
 Summary:       GNU Emacs text editor
 Name:          emacs
 Epoch:         1
-Version:       26.2
+Version:       27.0.50
 Release:       1%{?dist}
 License:       GPLv3+ and CC0-1.0
 URL:           http://www.gnu.org/software/emacs/
-Source0:       https://ftp.gnu.org/gnu/emacs/emacs-%{version}.tar.xz
+Source0:       https://github.com/emacs-mirror/emacs/archive/%{commit}/emacs-%{shortcommit}.tar.gz
 Source1:       emacs.desktop
 Source3:       dotemacs.el
 Source4:       site-start.el
@@ -18,11 +20,8 @@ Source6:       emacs-terminal.desktop
 Source7:       emacs-terminal.sh
 Source8:       emacs.service
 Source9:       %{name}.appdata.xml
-# rhbz#713600
-Patch1:        emacs-spellchecker.patch
-Patch2:        emacs-system-crypto-policies.patch
 
-BuildRequires:  gcc
+BuildRequires: gcc
 BuildRequires: atk-devel
 BuildRequires: cairo-devel
 BuildRequires: freetype-devel
@@ -30,6 +29,8 @@ BuildRequires: fontconfig-devel
 BuildRequires: dbus-devel
 BuildRequires: giflib-devel
 BuildRequires: glibc-devel
+BuildRequires: harfbuzz-devel
+BuildRequires: jansson-devel
 BuildRequires: libpng-devel
 BuildRequires: libjpeg-turbo-devel
 BuildRequires: libjpeg-turbo
@@ -64,9 +65,6 @@ BuildRequires: libacl-devel
 BuildRequires: gtk3-devel
 BuildRequires: webkit2gtk3-devel
 
-# For lucid
-BuildRequires: Xaw3d-devel
-
 %ifarch %{ix86}
 BuildRequires: util-linux
 %endif
@@ -93,22 +91,6 @@ language (elisp), and the capability to read mail, news, and more
 without leaving the editor.
 
 This package provides an emacs binary with support for X windows.
-
-%package lucid
-Summary:       GNU Emacs text editor with LUCID toolkit X support
-Requires(preun): %{_sbindir}/alternatives
-Requires(posttrans): %{_sbindir}/alternatives
-Requires:      emacs-common = %{epoch}:%{version}-%{release}
-Provides:      emacs(bin) = %{epoch}:%{version}-%{release}
-
-%description lucid
-Emacs is a powerful, customizable, self-documenting, modeless text
-editor. Emacs contains special code editing features, a scripting
-language (elisp), and the capability to read mail, news, and more
-without leaving the editor.
-
-This package provides an emacs binary with support for X windows
-using LUCID toolkit.
 
 %package nox
 Summary:       GNU Emacs text editor without X support
@@ -143,8 +125,7 @@ editor. Emacs contains special code editing features, a scripting
 language (elisp), and the capability to read mail, news, and more
 without leaving the editor.
 
-This package contains all the common files needed by emacs, emacs-lucid
-or emacs-nox.
+This package contains all the common files needed by emacs or emacs-nox.
 
 %package terminal
 Summary:       A desktop menu item for GNU Emacs terminal.
@@ -173,11 +154,9 @@ Summary: Development header files for Emacs
 Development header files for Emacs.
 
 %prep
-%setup -q
+%autosetup -n emacs-%{commit}
 
-%patch1 -p1 -b .spellchecker
-%patch2 -p1 -b .system-crypto-policies
-autoconf
+./autogen.sh
 
 # We prefer our emacs.desktop file
 cp %SOURCE1 etc/emacs.desktop
@@ -187,15 +166,12 @@ grep -v "tetris.elc" lisp/Makefile.in > lisp/Makefile.in.new \
 grep -v "pong.elc" lisp/Makefile.in > lisp/Makefile.in.new \
    && mv lisp/Makefile.in.new lisp/Makefile.in
 
-# Avoid trademark issues
-rm -f lisp/play/tetris.el lisp/play/tetris.elc
-rm -f lisp/play/pong.el lisp/play/pong.el
-
 # Sorted list of info files
 %define info_files ada-mode auth autotype bovine calc ccmode cl dbus dired-x ebrowse ede ediff edt efaq-w32 efaq eieio eintr elisp emacs-gnutls emacs-mime emacs epa erc ert eshell eudc eww flymake forms gnus htmlfontify idlwave ido info mairix-el message mh-e newsticker nxml-mode octave-mode org pcl-cvs pgg rcirc reftex remember sasl sc semantic ses sieve smtpmail speedbar srecode todo-mode tramp url vhdl-mode vip viper widget wisent woman
 
 # Since the list of info files has to be maintained, check if all info files
 # from the upstream tarball are actually present in %%info_files.
+make info
 cd info
 fs=( $(ls *.info) )
 is=( %info_files  )
@@ -230,20 +206,8 @@ LDFLAGS=-Wl,-z,relro;  export LDFLAGS;
 
 %configure --with-dbus --with-gif --with-jpeg --with-png --with-rsvg \
            --with-tiff --with-xft --with-xpm --with-x-toolkit=gtk3 --with-gpm=no \
-           --with-xwidgets --with-modules
-make bootstrap
-%{setarch} make %{?_smp_mflags}
-cd ..
-
-# Build Lucid binary
-mkdir build-lucid && cd build-lucid
-ln -s ../configure .
-
-LDFLAGS=-Wl,-z,relro;  export LDFLAGS;
-
-%configure --with-dbus --with-gif --with-jpeg --with-png --with-rsvg \
-           --with-tiff --with-xft --with-xpm --with-x-toolkit=lucid --with-gpm=no \
-           --with-modules
+           --with-xwidgets --with-modules --with-jansson --with-harfbuzz \
+           --with-mailutils --with-cairo
 make bootstrap
 %{setarch} make %{?_smp_mflags}
 cd ..
@@ -256,7 +220,7 @@ ln -s ../configure .
 cd ..
 
 # Remove versioned file so that we end up with .1 suffix and only one DOC file
-rm build-{gtk,lucid,nox}/src/emacs-%{version}.*
+rm build-{gtk,nox}/src/emacs-%{version}.*
 
 # Create pkgconfig file
 cat > emacs.pc << EOF
@@ -290,9 +254,6 @@ touch %{buildroot}%{_bindir}/emacs
 # Do not compress the files which implement compression itself (#484830)
 gunzip %{buildroot}%{_datadir}/emacs/%{version}/lisp/jka-compr.el.gz
 gunzip %{buildroot}%{_datadir}/emacs/%{version}/lisp/jka-cmpr-hook.el.gz
-
-# Install the emacs with LUCID toolkit
-install -p -m 0755 build-lucid/src/emacs %{buildroot}%{_bindir}/emacs-%{version}-lucid
 
 # Install the emacs without X
 install -p -m 0755 build-nox/src/emacs %{buildroot}%{_bindir}/emacs-%{version}-nox
@@ -383,14 +344,6 @@ rm %{buildroot}%{_datadir}/icons/hicolor/scalable/mimetypes/emacs-document23.svg
 %posttrans
 %{_sbindir}/alternatives --install %{_bindir}/emacs emacs %{_bindir}/emacs-%{version} 80
 
-%preun lucid
-%{_sbindir}/alternatives --remove emacs %{_bindir}/emacs-%{version}-lucid
-%{_sbindir}/alternatives --remove emacs-lucid %{_bindir}/emacs-%{version}-lucid
-
-%posttrans lucid
-%{_sbindir}/alternatives --install %{_bindir}/emacs emacs %{_bindir}/emacs-%{version}-lucid 70
-%{_sbindir}/alternatives --install %{_bindir}/emacs-lucid emacs-lucid %{_bindir}/emacs-%{version}-lucid 60
-
 %preun nox
 %{_sbindir}/alternatives --remove emacs %{_bindir}/emacs-%{version}-nox
 %{_sbindir}/alternatives --remove emacs-nox %{_bindir}/emacs-%{version}-nox
@@ -414,11 +367,6 @@ rm %{buildroot}%{_datadir}/icons/hicolor/scalable/mimetypes/emacs-document23.svg
 %{_datadir}/icons/hicolor/*/apps/emacs.png
 %{_datadir}/icons/hicolor/scalable/apps/emacs.svg
 %{_datadir}/icons/hicolor/scalable/mimetypes/emacs-document.svg
-
-%files lucid
-%{_bindir}/emacs-%{version}-lucid
-%attr(0755,-,-) %ghost %{_bindir}/emacs
-%attr(0755,-,-) %ghost %{_bindir}/emacs-lucid
 
 %files nox
 %{_bindir}/emacs-%{version}-nox
@@ -458,6 +406,9 @@ rm %{buildroot}%{_datadir}/icons/hicolor/scalable/mimetypes/emacs-document23.svg
 %{_includedir}/emacs-module.h
 
 %changelog
+* Mon Jul 15 2019 Evan Klitzke <evan@eklitzke.org> - 1:27.0.50-1
+- start packaging from upstream 27.0.50 git
+
 * Wed Apr 17 2019 Jan Synáček <jsynacek@redhat.com> - 1:26.2-1
 - emacs-26.2 is available (#1699434)
 
