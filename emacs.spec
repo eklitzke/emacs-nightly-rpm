@@ -42,6 +42,7 @@ BuildRequires: libXrender-devel
 BuildRequires: libXt-devel
 BuildRequires: libXpm-devel
 BuildRequires: ncurses-devel
+BuildRequires: systemd-devel
 BuildRequires: xorg-x11-proto-devel
 BuildRequires: zlib-devel
 BuildRequires: gnutls-devel
