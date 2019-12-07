@@ -207,7 +207,7 @@ LDFLAGS=-Wl,-z,relro;  export LDFLAGS;
 
 %configure --with-dbus --with-gif --with-jpeg --with-png --with-rsvg \
            --with-tiff --with-xft --with-xpm --with-x-toolkit=gtk3 --with-gpm=no \
-           --with-xwidgets --with-modules --with-jansson --with-harfbuzz \
+           --with-xwidgets --with-modules --with-harfbuzz \
            --with-mailutils --with-cairo
 make bootstrap
 %{setarch} make %{?_smp_mflags}
